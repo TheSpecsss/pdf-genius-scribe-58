@@ -1,4 +1,3 @@
-
 // In a real implementation, we would use libraries like pdf-lib, pdf.js, etc.
 // For now, we'll create placeholder functions that simulate the behavior
 
@@ -70,9 +69,9 @@ export const generatePDF = async (
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Fetch the template to get the file URL
-    const { data: supabase } = await import('@/integrations/supabase/client');
-    const { data: template, error } = await supabase.supabase
+    // Import and use the Supabase client correctly
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: template, error } = await supabase
       .from('templates')
       .select('file_url, name')
       .eq('id', templateId)
