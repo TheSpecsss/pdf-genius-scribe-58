@@ -49,7 +49,8 @@ export async function ensureTemplatesTableExists(): Promise<boolean> {
     
     if (error && error.code === '42P01') { // Table doesn't exist error code
       // Create the templates table
-      const { error: createError } = await supabase.rpc('create_templates_table');
+      // We need to cast supabase to any here because the type definition doesn't include our custom RPC
+      const { error: createError } = await (supabase as any).rpc('create_templates_table');
       
       if (createError) {
         console.error("Failed to create templates table:", createError);
