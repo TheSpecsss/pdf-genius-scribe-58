@@ -73,12 +73,13 @@ export const generatePDF = async (
     // For demo purposes, we'll simulate this process
     await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing time
     
-    // In reality, this would return a blob URL for the generated PDF
+    // Create a sample PDF for demo purposes
+    // In reality, this would return a real generated PDF
     const fileName = `generated-document-${new Date().getTime()}.pdf`;
     
-    // This is for demo purposes only
-    // In a real implementation, we would generate a real PDF file
-    const downloadUrl = "#"; // Placeholder URL
+    // For demo purposes, use a sample PDF URL
+    // In a real app, this would be a URL to the generated PDF
+    const downloadUrl = "https://www.africau.edu/images/default/sample.pdf";
     
     return {
       downloadUrl,

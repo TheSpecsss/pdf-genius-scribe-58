@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { TemplateMetadata, generatePDF, AIResponse } from "@/lib/pdf";
@@ -89,6 +88,9 @@ export const useTemplateSteps = (template: TemplateMetadata, onClose: () => void
 
       // Move to final step
       setCurrentStep(3);
+      
+      // Log success for debugging
+      console.log("PDF generated successfully:", result.downloadUrl);
     } catch (error) {
       console.error("Error generating PDF preview:", error);
       toast.error("Failed to generate PDF preview. Please try again.");
@@ -100,6 +102,8 @@ export const useTemplateSteps = (template: TemplateMetadata, onClose: () => void
   const handleDownload = () => {
     if (stepData.generatedPdfUrl) {
       // In a real implementation, this would trigger the download
+      // For demo purposes, open in a new tab
+      window.open(stepData.generatedPdfUrl, '_blank');
       toast.success("PDF downloaded successfully!");
       handleClose();
     }
