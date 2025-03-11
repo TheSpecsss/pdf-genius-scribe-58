@@ -1,3 +1,4 @@
+
 // In a real implementation, we would use libraries like pdf-lib, pdf.js, etc.
 // For now, we'll create placeholder functions that simulate the behavior
 
@@ -60,9 +61,6 @@ export const generatePDF = async (
   aiResponse?: AIResponse
 ): Promise<GeneratedPDF> => {
   try {
-    // In a real implementation, we would use pdf-lib to modify the PDF
-    // with the filled data, respecting font styling and positioning
-    
     console.log("Generating PDF with template ID:", templateId);
     console.log("Data to fill:", filledData);
     
@@ -93,9 +91,21 @@ export const generatePDF = async (
     // Create a descriptive filename based on the template name
     const fileName = `${template.name.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`;
     
-    // In a real implementation, we would modify the PDF with the filled data
-    // and return a URL to the modified PDF. For now, we'll just return the original template URL.
-    const downloadUrl = template.file_url;
+    // In a real implementation with pdf-lib, we would:
+    // 1. Fetch the template PDF
+    // 2. Load it into pdf-lib
+    // 3. Add text at the appropriate positions for each placeholder
+    // 4. Save and return the modified PDF
+    
+    // For this demo, we'll generate a simple PDF with the filled data
+    // using PDFMake or another client-side PDF generation library
+    
+    // Create a new Blob with text content representing the filled PDF
+    const pdfContent = generateFilledPDFContent(template.name, filledData);
+    const pdfBlob = new Blob([pdfContent], { type: 'application/pdf' });
+    
+    // Create a URL for the Blob
+    const downloadUrl = URL.createObjectURL(pdfBlob);
     
     return {
       downloadUrl,
@@ -106,6 +116,24 @@ export const generatePDF = async (
     // Fallback to sample PDF if there's an error
     return fallbackPDF();
   }
+};
+
+// Helper function to generate a simple PDF with filled data
+const generateFilledPDFContent = (templateName: string, filledData: Record<string, string>): string => {
+  // In a real implementation, this would generate actual PDF content
+  // For now, we'll create a text representation
+  let content = `Template: ${templateName}\n\n`;
+  
+  // Add each field and its value
+  Object.entries(filledData).forEach(([key, value]) => {
+    const fieldName = key.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+    
+    content += `${fieldName}: ${value}\n`;
+  });
+  
+  return content;
 };
 
 // Fallback function to provide a sample PDF if there's an error

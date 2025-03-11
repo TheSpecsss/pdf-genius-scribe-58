@@ -102,11 +102,26 @@ export const useTemplateSteps = (template: TemplateMetadata, onClose: () => void
 
   const handleDownload = () => {
     if (stepData.generatedPdfUrl) {
-      // In a real implementation, this would trigger the download
-      // For demo purposes, open in a new tab
-      window.open(stepData.generatedPdfUrl, '_blank');
+      if (stepData.generatedPdfUrl.startsWith('blob:')) {
+        // For blob URLs created with URL.createObjectURL
+        const link = document.createElement("a");
+        link.href = stepData.generatedPdfUrl;
+        link.download = `${template.name.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL after download
+        setTimeout(() => URL.revokeObjectURL(stepData.generatedPdfUrl), 100);
+      } else {
+        // For regular URLs (like fallback PDF)
+        window.open(stepData.generatedPdfUrl, '_blank');
+      }
+      
       toast.success("PDF downloaded successfully!");
       handleClose();
+    } else {
+      toast.error("No PDF available to download");
     }
   };
 

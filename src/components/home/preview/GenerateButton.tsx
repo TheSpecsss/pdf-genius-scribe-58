@@ -38,16 +38,21 @@ const GenerateButton = () => {
       
       const result = await generatePDF(templateId, filledData);
       
-      // Create a download link
-      const link = document.createElement("a");
-      link.href = result.downloadUrl;
-      link.download = result.fileName;
-      link.target = "_blank";
-      
-      // Append to document, click, and remove
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (result.downloadUrl.startsWith('blob:')) {
+        // For blob URLs created with URL.createObjectURL
+        const link = document.createElement("a");
+        link.href = result.downloadUrl;
+        link.download = result.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL after download
+        setTimeout(() => URL.revokeObjectURL(result.downloadUrl), 100);
+      } else {
+        // For regular URLs (like fallback PDF)
+        window.open(result.downloadUrl, '_blank');
+      }
       
       toast.success("PDF downloaded successfully!");
     } catch (error) {
