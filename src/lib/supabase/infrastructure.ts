@@ -34,8 +34,7 @@ export async function ensureTemplatesTableExists(): Promise<boolean> {
   }
 }
 
-// Check if templates storage bucket exists
-// We don't need to create it anymore since it's created by SQL migration
+// Check if templates storage bucket exists and attempt to create it if it doesn't
 export async function ensureTemplatesBucketExists(): Promise<boolean> {
   try {
     // Check if the bucket exists
@@ -49,10 +48,48 @@ export async function ensureTemplatesBucketExists(): Promise<boolean> {
     const templatesBucketExists = buckets?.some(bucket => bucket.name === 'templates');
     
     if (!templatesBucketExists) {
-      // Instead of creating the bucket (which fails due to RLS), just notify the user
-      console.log("Templates bucket doesn't exist but should have been created by SQL migration");
-      toast.error("Templates storage not found. Please contact an administrator.");
-      return false;
+      // Try to create the bucket directly first
+      try {
+        const { error: createError } = await supabase.storage.createBucket('templates', {
+          public: true,
+          allowedMimeTypes: ['application/pdf'],
+          fileSizeLimit: 10485760, // 10MB
+        });
+        
+        if (!createError) {
+          toast.success("Templates storage created successfully");
+          return true;
+        }
+      } catch (directCreateError) {
+        console.log("Failed to create bucket directly, will try via RPC");
+      }
+      
+      // If direct creation failed, try to create via the RPC function
+      try {
+        const { error: rpcError } = await (supabase as any).rpc('create_templates_table');
+        
+        if (rpcError) {
+          console.error("Failed to create templates bucket via RPC:", rpcError);
+          toast.error("Templates storage could not be created. Please log in with admin credentials.");
+          return false;
+        }
+        
+        // Check if the bucket exists after RPC call
+        const { data: updatedBuckets } = await supabase.storage.listBuckets();
+        const bucketCreated = updatedBuckets?.some(bucket => bucket.name === 'templates');
+        
+        if (bucketCreated) {
+          toast.success("Templates storage created successfully");
+          return true;
+        } else {
+          toast.error("Templates storage not found. Please contact an administrator.");
+          return false;
+        }
+      } catch (rpcError) {
+        console.error("Error calling create_templates_table RPC:", rpcError);
+        toast.error("Failed to set up storage. Please check console for details.");
+        return false;
+      }
     }
     
     return true;
