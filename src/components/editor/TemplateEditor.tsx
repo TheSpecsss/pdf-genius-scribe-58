@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template }) => {
   const [activeTab, setActiveTab] = useState("edit");
   const [aiResponse, setAIResponse] = useState<AIResponse | null>(null);
   
-  // Initialize form data
   useEffect(() => {
     const initialData: Record<string, string> = {};
     template.placeholders.forEach((placeholder) => {
@@ -31,7 +29,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template }) => {
     });
     setFormData(initialData);
     
-    // Simulate loading font info
     setFontInfo({
       fontFamily: "Times New Roman",
       fontSize: 12,
@@ -72,10 +69,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template }) => {
     try {
       const result = await generatePDF(template.id, formData, aiResponse || undefined);
       
-      // In a real implementation, we would create a download link
       toast.success("PDF generated successfully!");
       
-      // Simulate download functionality
       setTimeout(() => {
         toast("Download would start in a real implementation");
       }, 1000);
@@ -161,18 +156,10 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template }) => {
           <TabsContent value="edit" className="mt-4">
             <Card>
               <CardContent className="p-4">
-                <div className="aspect-[2/3] relative overflow-hidden rounded-md bg-muted">
-                  <img
-                    src={template.previewUrl}
-                    alt={template.name}
-                    className="object-cover w-full h-full"
-                  />
-                  
+                <div className="aspect-[2/3] relative overflow-hidden rounded-md bg-muted flex items-center justify-center">
                   {Object.entries(formData).map(([key, value]) => {
                     if (!value && !aiSuggestions[key]) return null;
                     
-                    // In a real implementation, this would use the placeholder positions
-                    // For now, we'll just display a sample overlay
                     return (
                       <div
                         key={key}
