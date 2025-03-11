@@ -1,15 +1,13 @@
-
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar, Trash2 } from "lucide-react";
 import { TemplateMetadata } from "@/lib/pdf";
-import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { deleteTemplate } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import EditTemplate from "./EditTemplate";
+import UseTemplate from "./UseTemplate";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface TemplateCardProps {
   template: TemplateMetadata;
@@ -90,11 +89,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
       </CardContent>
       
       <CardFooter className="pt-0 flex gap-2">
-        <Button asChild className="flex-1">
-          <Link to={`/templates/${template.id}`}>
-            Use Template
-          </Link>
-        </Button>
+        <UseTemplate template={template} />
         
         <EditTemplate template={template} />
         
