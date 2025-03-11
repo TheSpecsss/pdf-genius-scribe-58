@@ -155,15 +155,68 @@ export const generatePDF = async (
   }
 };
 
-// Fallback function to provide a sample PDF if there's an error
-const fallbackPDF = (): GeneratedPDF => {
-  console.warn("Using fallback PDF due to error");
+// Create a proper fallback PDF instead of using an external URL
+const fallbackPDF = async (): Promise<GeneratedPDF> => {
+  console.warn("Using fallback PDF generation");
   
-  // Use a reliable sample PDF URL
-  return {
-    downloadUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    fileName: `fallback-document-${new Date().getTime()}.pdf`,
-  };
+  try {
+    // Import pdfmake
+    const pdfMake = await import('pdfmake/build/pdfmake');
+    const pdfFonts = await import('pdfmake/build/vfs_fonts');
+    
+    pdfMake.default.vfs = pdfFonts.pdfMake.vfs;
+    
+    // Create a simple fallback document
+    const docDefinition = {
+      content: [
+        { 
+          text: 'Generated Document',
+          style: 'header'
+        },
+        {
+          text: '\nThis is a basic document generated as a fallback.\n\n',
+          style: 'subheader'
+        },
+        {
+          text: `Generated on: ${new Date().toLocaleString()}`,
+          style: 'normal'
+        }
+      ],
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+          margin: [0, 0, 0, 10]
+        },
+        subheader: {
+          fontSize: 14,
+          margin: [0, 0, 0, 5]
+        },
+        normal: {
+          fontSize: 12
+        }
+      }
+    };
+    
+    // Generate PDF blob
+    const pdfBlob = await new Promise<Blob>((resolve) => {
+      const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
+      pdfDocGenerator.getBlob((blob) => {
+        resolve(blob);
+      });
+    });
+    
+    // Create blob URL
+    const downloadUrl = URL.createObjectURL(pdfBlob);
+    
+    return {
+      downloadUrl,
+      fileName: `fallback-document-${new Date().getTime()}.pdf`
+    };
+  } catch (error) {
+    console.error("Error in fallback PDF generation:", error);
+    throw new Error("Failed to generate fallback PDF");
+  }
 };
 
 export const detectFonts = async (file: File): Promise<{
