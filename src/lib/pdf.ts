@@ -1,4 +1,3 @@
-
 // In a real implementation, we would use libraries like pdf-lib, pdf.js, etc.
 // For now, we'll create placeholder functions that simulate the behavior
 
@@ -90,11 +89,12 @@ export const generatePDF = async (
     console.log("Using template file URL:", template.file_url);
     
     try {
-      // We'll use pdfmake to create a filled PDF document
-      const pdfMake = await import('pdfmake/build/pdfmake');
-      const pdfFonts = await import('pdfmake/build/vfs_fonts');
+      // Import pdfmake and fonts dynamically
+      const pdfMake = (await import('pdfmake/build/pdfmake')).default;
+      const pdfFonts = (await import('pdfmake/build/vfs_fonts')).pdfMake.vfs;
       
-      pdfMake.default.vfs = pdfFonts.pdfMake.vfs;
+      // Set up the virtual file system for fonts
+      pdfMake.vfs = pdfFonts;
       
       // Create a document definition
       const docDefinition = {
@@ -133,7 +133,7 @@ export const generatePDF = async (
       // Generate the PDF as a blob
       const pdfBlob = await new Promise<Blob>((resolve, reject) => {
         try {
-          const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
+          const pdfDocGenerator = pdfMake.createPdf(docDefinition);
           pdfDocGenerator.getBlob((blob) => {
             resolve(blob);
           });
@@ -164,11 +164,12 @@ const fallbackPDF = async (): Promise<GeneratedPDF> => {
   console.warn("Using fallback PDF generation");
   
   try {
-    // Import pdfmake
-    const pdfMake = await import('pdfmake/build/pdfmake');
-    const pdfFonts = await import('pdfmake/build/vfs_fonts');
+    // Import pdfmake and fonts dynamically
+    const pdfMake = (await import('pdfmake/build/pdfmake')).default;
+    const pdfFonts = (await import('pdfmake/build/vfs_fonts')).pdfMake.vfs;
     
-    pdfMake.default.vfs = pdfFonts.pdfMake.vfs;
+    // Set up the virtual file system for fonts
+    pdfMake.vfs = pdfFonts;
     
     // Create a simple fallback document
     const docDefinition = {
@@ -205,7 +206,7 @@ const fallbackPDF = async (): Promise<GeneratedPDF> => {
     // Generate PDF blob
     const pdfBlob = await new Promise<Blob>((resolve, reject) => {
       try {
-        const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
+        const pdfDocGenerator = pdfMake.createPdf(docDefinition);
         pdfDocGenerator.getBlob((blob) => {
           resolve(blob);
         });
