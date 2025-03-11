@@ -2,6 +2,8 @@
 -- Create a PostgreSQL function that will create the templates table if it doesn't exist
 CREATE OR REPLACE FUNCTION create_templates_table()
 RETURNS void AS $$
+DECLARE
+  v_count INTEGER;
 BEGIN
     -- Check if the table already exists
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'templates') THEN
@@ -33,24 +35,7 @@ BEGIN
         ON public.templates FOR DELETE USING (auth.uid()::text = created_by);
     END IF;
 
-    -- Create the templates bucket if it doesn't exist
-    BEGIN
-        -- We need to use dynamic SQL here because storage.buckets is not always available in all environments
-        EXECUTE 'SELECT count(*) FROM storage.buckets WHERE name = ''templates''' INTO STRICT v_count;
-        IF v_count = 0 THEN
-            -- Insert the bucket into storage.buckets
-            EXECUTE 'INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES (''templates'', ''templates'', true, 10485760, ''{application/pdf}'')';
-            
-            -- Create bucket policies
-            EXECUTE 'INSERT INTO storage.policies (name, definition, bucket_id) VALUES 
-                (''Public Read Access'', ''{"roleName": "anon", "allowedOperations": ["SELECT"]}'', ''templates'')';
-            EXECUTE 'INSERT INTO storage.policies (name, definition, bucket_id) VALUES 
-                (''Authenticated Users Upload'', ''{"roleName": "authenticated", "allowedOperations": ["INSERT", "UPDATE", "DELETE"]}'', ''templates'')';
-        END IF;
-        EXCEPTION WHEN undefined_table THEN
-            -- Storage schema not available, log a notice
-            RAISE NOTICE 'Storage schema not available. Bucket creation skipped.';
-    END;
+    -- We don't need to create the bucket anymore as we're using an existing one
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

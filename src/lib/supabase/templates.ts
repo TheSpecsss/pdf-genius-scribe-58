@@ -45,11 +45,9 @@ export async function uploadTemplate(
   metadata: Omit<TemplateMetadata, 'id' | 'previewUrl'>
 ): Promise<TemplateMetadata | null> {
   try {
-    // Make sure the table and bucket exist before uploading
-    const [tableExists, bucketExists] = await Promise.all([
-      ensureTemplatesTableExists(),
-      ensureTemplatesBucketExists()
-    ]);
+    // Make sure the table exists before uploading
+    const tableExists = await ensureTemplatesTableExists();
+    const bucketExists = await ensureTemplatesBucketExists();
     
     if (!tableExists || !bucketExists) {
       toast.error("Failed to set up infrastructure for template upload");
@@ -67,6 +65,7 @@ export async function uploadTemplate(
       
     if (uploadError) {
       console.error("Error uploading template file:", uploadError);
+      toast.error("Error uploading file: " + uploadError.message);
       throw uploadError;
     }
     
@@ -97,6 +96,7 @@ export async function uploadTemplate(
       
     if (dbError) {
       console.error("Error saving template metadata:", dbError);
+      toast.error("Error saving template: " + dbError.message);
       throw dbError;
     }
     
