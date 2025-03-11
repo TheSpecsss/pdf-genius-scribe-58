@@ -81,7 +81,7 @@ const TemplateStepsModal: React.FC<TemplateStepsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden max-h-[90vh] flex flex-col">
         <ModalHeader 
           title={template.name}
           currentStep={currentStep}
@@ -90,7 +90,7 @@ const TemplateStepsModal: React.FC<TemplateStepsModalProps> = ({
           onClose={handleClose}
         />
 
-        <div className="px-6 pb-6">{renderStepContent()}</div>
+        <div className="px-6 pb-6 overflow-y-auto flex-1">{renderStepContent()}</div>
       </DialogContent>
     </Dialog>
   );

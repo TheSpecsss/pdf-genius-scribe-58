@@ -1,54 +1,60 @@
 
 import React from "react";
-import { CircleCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export interface Step {
-  id: number;
-  name: string;
-}
-
 interface StepIndicatorProps {
-  steps: Step[];
+  steps: Array<{ id: number; name: string }>;
   currentStep: number;
+  isSubmitting?: boolean;
 }
 
-const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => {
+const StepIndicator: React.FC<StepIndicatorProps> = ({
+  steps,
+  currentStep,
+  isSubmitting = false,
+}) => {
   return (
-    <div className="flex items-center w-full mt-4 mb-2">
-      {steps.map((step, i) => (
+    <div className="flex items-center justify-between w-full">
+      {steps.map((step, index) => (
         <React.Fragment key={step.id}>
+          {/* Step indicator */}
           <div className="flex flex-col items-center">
-            <div 
+            <div
               className={cn(
-                "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
-                currentStep > step.id 
-                  ? "bg-primary border-primary text-primary-foreground" 
-                  : currentStep === step.id 
-                    ? "border-primary text-primary" 
-                    : "border-muted-foreground text-muted-foreground"
+                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-colors",
+                step.id === currentStep
+                  ? "bg-primary text-primary-foreground"
+                  : step.id < currentStep
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted text-muted-foreground"
               )}
             >
-              {currentStep > step.id ? (
-                <CircleCheck className="h-4 w-4" />
+              {isSubmitting && step.id === currentStep ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
-                <span>{step.id}</span>
+                step.id
               )}
             </div>
-            <span 
+            <span
               className={cn(
-                "text-xs mt-1", 
-                currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                "text-xs mt-1",
+                step.id === currentStep
+                  ? "text-foreground"
+                  : "text-muted-foreground"
               )}
             >
               {step.name}
             </span>
           </div>
-          {i < steps.length - 1 && (
-            <div 
+
+          {/* Connector line between steps (except after the last step) */}
+          {index < steps.length - 1 && (
+            <div
               className={cn(
-                "h-[2px] flex-1 mx-1",
-                currentStep > i + 1 ? "bg-primary" : "bg-muted"
+                "h-0.5 flex-1 mx-2",
+                currentStep > index + 1
+                  ? "bg-primary/60"
+                  : "bg-muted"
               )}
             />
           )}
