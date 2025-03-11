@@ -3,7 +3,6 @@ import { extendedSupabase } from "./config";
 import { ensureTemplatesTableExists, ensureTemplatesBucketExists } from "./infrastructure";
 import { TemplateMetadata } from "../pdf";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { getCurrentUser } from "../auth";
 
 // Template related operations
@@ -36,8 +35,7 @@ export async function fetchTemplates(): Promise<TemplateMetadata[]> {
     })) || [];
   } catch (error) {
     console.error("Failed to fetch templates:", error);
-    toast.error("Failed to fetch templates");
-    return [];
+    throw error;
   }
 }
 
@@ -58,8 +56,7 @@ export async function uploadTemplate(
     const bucketExists = await ensureTemplatesBucketExists();
     
     if (!tableExists || !bucketExists) {
-      toast.error("Failed to set up infrastructure for template upload");
-      return null;
+      throw new Error("Failed to set up infrastructure for template upload");
     }
     
     // 1. Upload the PDF file to storage
@@ -79,7 +76,6 @@ export async function uploadTemplate(
       
     if (uploadError) {
       console.error("Error uploading template file:", uploadError);
-      toast.error("Error uploading file: " + uploadError.message);
       throw uploadError;
     }
     
@@ -117,7 +113,6 @@ export async function uploadTemplate(
       
     if (dbError) {
       console.error("Error saving template metadata:", dbError);
-      toast.error("Error saving template: " + dbError.message);
       throw dbError;
     }
     
@@ -137,8 +132,7 @@ export async function uploadTemplate(
     return null;
   } catch (error) {
     console.error("Failed to upload template:", error);
-    toast.error("Failed to upload template");
-    return null;
+    throw error;
   }
 }
 
@@ -189,7 +183,6 @@ export async function deleteTemplate(id: string): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("Failed to delete template:", error);
-    toast.error("Failed to delete template");
-    return false;
+    throw error;
   }
 }

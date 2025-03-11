@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 // Check if templates table exists and create it if it doesn't
 export async function ensureTemplatesTableExists(): Promise<boolean> {
@@ -15,22 +14,21 @@ export async function ensureTemplatesTableExists(): Promise<boolean> {
       
       if (createError) {
         console.error("Failed to create templates table:", createError);
-        toast.error("Failed to set up database. Please check console for details.");
-        return false;
+        throw new Error(`Failed to set up database: ${createError.message}`);
       }
       
-      toast.success("Templates table created successfully");
+      console.log("Templates table created successfully");
       return true;
     } else if (error) {
       console.error("Error checking templates table:", error);
-      return false;
+      throw error;
     }
     
     // Table exists
     return true;
   } catch (error) {
     console.error("Error setting up templates table:", error);
-    return false;
+    throw error;
   }
 }
 
@@ -44,14 +42,13 @@ export async function ensureTemplatesBucketExists(): Promise<boolean> {
     
     if (error) {
       console.error("Error checking templates bucket:", error);
-      toast.error("Templates bucket not found or not accessible. Attempting to create it...");
+      console.log("Templates bucket not found or not accessible. Attempting to create it...");
       
       // Call the function that creates the bucket (via SQL)
       const { error: createError } = await (supabase as any).rpc('create_templates_table');
       if (createError) {
         console.error("Failed to create templates bucket:", createError);
-        toast.error("Failed to create templates storage bucket.");
-        return false;
+        throw new Error(`Failed to create templates storage bucket: ${createError.message}`);
       }
       
       // Try to list again to verify bucket was created
@@ -61,10 +58,10 @@ export async function ensureTemplatesBucketExists(): Promise<boolean> {
         
       if (retryError) {
         console.error("Bucket still not accessible after creation attempt:", retryError);
-        return false;
+        throw new Error(`Bucket still not accessible after creation attempt: ${retryError.message}`);
       }
       
-      toast.success("Templates bucket created successfully");
+      console.log("Templates bucket created successfully");
       return true;
     }
     
@@ -72,7 +69,6 @@ export async function ensureTemplatesBucketExists(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("Error checking templates bucket:", error);
-    toast.error("Error accessing templates storage. Please check permissions.");
-    return false;
+    throw error;
   }
 }

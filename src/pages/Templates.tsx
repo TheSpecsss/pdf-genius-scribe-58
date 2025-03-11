@@ -1,10 +1,9 @@
-
 import React, { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import TemplateList from "@/components/templates/TemplateList";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { fetchTemplates, ensureTemplatesTableExists, ensureTemplatesBucketExists } from "@/lib/supabase";
 import UploadTemplate from "@/components/templates/UploadTemplate";
 import { toast } from "sonner";
@@ -26,7 +25,7 @@ const Templates = () => {
         }
       } catch (error) {
         console.error("Failed to initialize Supabase infrastructure:", error);
-        toast.error("Failed to connect to the database");
+        toast.error(`Failed to connect to the database: ${error instanceof Error ? error.message : String(error)}`);
       }
     };
     

@@ -1,7 +1,4 @@
 
-import { toast } from "sonner";
-import { AIResponse } from "./api";
-
 // In a real implementation, we would use libraries like pdf-lib, pdf.js, etc.
 // For now, we'll create placeholder functions that simulate the behavior
 
@@ -47,7 +44,6 @@ export const analyzePDF = async (file: File): Promise<{
     };
   } catch (error) {
     console.error("PDF analysis error:", error);
-    toast.error("Failed to analyze PDF. Please try again.");
     throw error;
   }
 };
@@ -71,15 +67,12 @@ export const generatePDF = async (
     // In a real implementation, we would generate a real PDF file
     const downloadUrl = "#"; // Placeholder URL
     
-    toast.success("PDF generated successfully!");
-    
     return {
       downloadUrl,
       fileName,
     };
   } catch (error) {
     console.error("PDF generation error:", error);
-    toast.error("Failed to generate PDF. Please try again.");
     throw error;
   }
 };
@@ -88,12 +81,17 @@ export const detectFonts = async (file: File): Promise<{
   fontName: string;
   fontSize: number;
 }> => {
-  // In a real implementation, we would analyze the PDF to detect fonts
-  // For now, we'll return placeholder values
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing time
-  
-  return {
-    fontName: "Times New Roman",
-    fontSize: 12,
-  };
+  try {
+    // In a real implementation, we would analyze the PDF to detect fonts
+    // For now, we'll return placeholder values
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing time
+    
+    return {
+      fontName: "Times New Roman",
+      fontSize: 12,
+    };
+  } catch (error) {
+    console.error("Font detection error:", error);
+    throw error;
+  }
 };

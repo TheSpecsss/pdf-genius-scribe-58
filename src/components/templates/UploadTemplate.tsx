@@ -97,7 +97,7 @@ const UploadTemplate: React.FC = () => {
       }
     } catch (error) {
       console.error("Error uploading template:", error);
-      toast.error("Failed to upload template");
+      toast.error(`Failed to upload template: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsUploading(false);
     }
