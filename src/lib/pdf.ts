@@ -68,12 +68,11 @@ export const generatePDF = async (
     await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing time
     
     // Create a sample PDF for demo purposes
-    // In reality, this would return a real generated PDF
     const fileName = `generated-document-${new Date().getTime()}.pdf`;
     
-    // For demo purposes, use a sample PDF URL
-    // In a real app, this would be a URL to the generated PDF
-    const downloadUrl = "https://www.africau.edu/images/default/sample.pdf";
+    // Instead of using an external URL, use a local sample PDF or a more reliable CDN
+    // For this example, we'll use a PDF from mozilla's PDF.js samples which is more reliable
+    const downloadUrl = "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf";
     
     return {
       downloadUrl,

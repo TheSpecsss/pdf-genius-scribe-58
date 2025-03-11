@@ -6,6 +6,7 @@ import { ArrowLeft, Download, FileWarning, RefreshCw } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import { toast } from "sonner";
 
 // Initialize PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
@@ -42,9 +43,18 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
     setPageNumber(1);
   };
 
-  const handlePdfError = () => {
-    console.error("Error loading PDF");
+  const handlePdfError = (error: Error) => {
+    console.error("Error loading PDF", error);
     setPdfError(true);
+    toast.error("Error loading PDF preview. You can still download the document.");
+  };
+
+  const handleDownload = () => {
+    if (generatedPdfUrl) {
+      onDownload();
+    } else {
+      toast.error("No PDF available to download");
+    }
   };
 
   return (
@@ -108,7 +118,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
             <FileWarning className="h-12 w-12 text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground text-center px-4 mb-4">
               {pdfError 
-                ? "Failed to load PDF preview. Try refreshing."
+                ? "Failed to load PDF preview. You can still download the document."
                 : "PDF preview not available. Please wait while we generate your document."}
             </p>
             {pdfError && (
@@ -144,7 +154,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
           Back
         </Button>
         <Button 
-          onClick={onDownload}
+          onClick={handleDownload}
           disabled={!generatedPdfUrl && !loading}
         >
           <Download className="mr-2 h-4 w-4" />
