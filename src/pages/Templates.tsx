@@ -4,8 +4,37 @@ import Navbar from "@/components/layout/Navbar";
 import TemplateList from "@/components/templates/TemplateList";
 import { Button } from "@/components/ui/button";
 import { UploadCloud } from "lucide-react";
+import { TemplateMetadata } from "@/lib/pdf";
 
 const Templates = () => {
+  // Mock template data
+  const mockTemplates: TemplateMetadata[] = [
+    {
+      id: "1",
+      name: "Invoice Template",
+      createdAt: new Date(2023, 5, 15),
+      updatedAt: new Date(2023, 5, 15),
+      previewUrl: "/placeholder.svg",
+      placeholders: ["company", "client", "amount", "date"],
+    },
+    {
+      id: "2",
+      name: "Contract Agreement",
+      createdAt: new Date(2023, 7, 3),
+      updatedAt: new Date(2023, 7, 3),
+      previewUrl: "/placeholder.svg",
+      placeholders: ["party1", "party2", "terms", "date", "signature"],
+    },
+    {
+      id: "3",
+      name: "Certificate Template",
+      createdAt: new Date(2023, 9, 22),
+      updatedAt: new Date(2023, 9, 22),
+      previewUrl: "/placeholder.svg",
+      placeholders: ["name", "course", "date", "instructor"],
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -22,7 +51,7 @@ const Templates = () => {
             Upload New Template
           </Button>
         </div>
-        <TemplateList />
+        <TemplateList templates={mockTemplates} />
       </main>
     </div>
   );
