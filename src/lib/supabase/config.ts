@@ -15,21 +15,18 @@ export type ExtendedDatabase = Database & {
           created_at: string;
           created_by: string;
           file_url: string;
-          preview_url?: string;
           placeholders?: string[];
         };
         Insert: {
           name: string;
           created_by: string;
           file_url: string;
-          preview_url?: string;
           placeholders?: string[];
         };
         Update: {
           name?: string;
           created_by?: string;
           file_url?: string;
-          preview_url?: string;
           placeholders?: string[];
         };
       };

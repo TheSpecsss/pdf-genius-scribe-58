@@ -8,7 +8,6 @@ export interface TemplateMetadata {
   createdAt: Date;
   createdBy: string;
   placeholders: string[];
-  previewUrl: string;
 }
 
 export interface GeneratedPDF {
@@ -32,7 +31,6 @@ export interface AIResponse {
 export const analyzePDF = async (file: File): Promise<{
   text: string;
   placeholders: string[];
-  previewUrl: string;
 }> => {
   try {
     // In a real implementation, we would use pdf.js to extract text
@@ -40,9 +38,6 @@ export const analyzePDF = async (file: File): Promise<{
     
     // For demo purposes, we'll simulate this process
     await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing time
-    
-    // Create a preview URL
-    const previewUrl = URL.createObjectURL(file);
     
     // Simulate text extraction and placeholder detection
     // In a real implementation, this would use actual PDF parsing
@@ -53,7 +48,6 @@ export const analyzePDF = async (file: File): Promise<{
     return {
       text: `This is a sample contract with placeholders for ${placeholders.join(", ")}.`,
       placeholders,
-      previewUrl,
     };
   } catch (error) {
     console.error("PDF analysis error:", error);

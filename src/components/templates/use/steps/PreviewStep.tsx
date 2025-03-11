@@ -1,7 +1,14 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TemplateMetadata } from "@/lib/pdf";
 import { ArrowLeft, Download, FileWarning, RefreshCw } from "lucide-react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/TextLayer.css";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+
+// Initialize PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PreviewStepProps {
   template: TemplateMetadata;
@@ -19,19 +26,26 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
   onDownload,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [iframeError, setIframeError] = useState(false);
-
-  // Handle iframe loading errors
-  const handleIframeError = () => {
-    setIframeError(true);
-  };
+  const [pdfError, setPdfError] = useState(false);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
 
   // Reset error state when URL changes
   useEffect(() => {
     if (generatedPdfUrl) {
-      setIframeError(false);
+      setPdfError(false);
     }
   }, [generatedPdfUrl]);
+
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    setPageNumber(1);
+  };
+
+  const handlePdfError = () => {
+    console.error("Error loading PDF");
+    setPdfError(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -43,71 +57,80 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
       </div>
 
       <div className="bg-muted rounded-md overflow-hidden border h-[60vh] relative">
-        {generatedPdfUrl && !iframeError ? (
-          // If we have a valid PDF URL, embed it
-          <iframe
-            src={generatedPdfUrl}
-            className="w-full h-full"
-            title="PDF Preview"
-            onError={handleIframeError}
-          />
-        ) : (
-          // Otherwise show the template preview with overlays
-          <div className="relative h-full flex items-center justify-center">
-            <div className="aspect-[2/3] h-[90%] relative mx-auto">
-              <img
-                src={template.previewUrl}
-                alt={template.name}
-                className="object-contain w-full h-full"
-              />
-
-              {/* Display filled placeholders as overlays */}
-              {Object.entries(formData).map(([key, value], index) => (
-                <div
-                  key={key}
-                  className="absolute bg-primary/10 backdrop-blur-xs px-2 py-1 rounded border border-primary/20 max-w-[80%] overflow-hidden"
-                  style={{
-                    top: `${15 + (index * 15) % 70}%`,
-                    left: `${20 + (index * 10) % 60}%`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                >
-                  <p className="text-xs font-medium truncate">
-                    {value}
-                  </p>
+        {generatedPdfUrl && !pdfError ? (
+          <div className="w-full h-full flex flex-col items-center overflow-auto">
+            <Document
+              file={generatedPdfUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={handlePdfError}
+              loading={
+                <div className="flex items-center justify-center h-full">
+                  <RefreshCw className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ))}
-
-              {/* Display warning if no PDF generated or there was an error */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80">
-                <FileWarning className="h-12 w-12 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground text-center px-4 mb-4">
-                  {iframeError 
-                    ? "Failed to load PDF preview. Try refreshing."
-                    : "PDF preview not available. Click the button below to generate the document."}
-                </p>
-                {iframeError && (
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIframeError(false);
-                      setLoading(true);
-                      // Force a reload after a short delay
-                      setTimeout(() => setLoading(false), 1000);
-                    }}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                    )}
-                    Refresh Preview
-                  </Button>
-                )}
+              }
+              className="w-full h-full flex flex-col items-center"
+            >
+              <Page 
+                pageNumber={pageNumber} 
+                className="my-4"
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+              />
+            </Document>
+            
+            {numPages && numPages > 1 && (
+              <div className="bg-background/80 py-2 px-4 rounded-md flex items-center gap-2 mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
+                  disabled={pageNumber <= 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm">
+                  Page {pageNumber} of {numPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPageNumber(Math.min(numPages, pageNumber + 1))}
+                  disabled={pageNumber >= numPages}
+                >
+                  Next
+                </Button>
               </div>
-            </div>
+            )}
+          </div>
+        ) : (
+          // Display error or loading state
+          <div className="flex flex-col items-center justify-center h-full">
+            <FileWarning className="h-12 w-12 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground text-center px-4 mb-4">
+              {pdfError 
+                ? "Failed to load PDF preview. Try refreshing."
+                : "PDF preview not available. Please wait while we generate your document."}
+            </p>
+            {pdfError && (
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setPdfError(false);
+                  setLoading(true);
+                  // Force a reload after a short delay
+                  setTimeout(() => setLoading(false), 1000);
+                }}
+                disabled={loading}
+              >
+                {loading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Refresh Preview
+              </Button>
+            )}
           </div>
         )}
       </div>

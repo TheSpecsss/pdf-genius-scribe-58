@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,13 +60,8 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
       </CardHeader>
       
       <CardContent className="py-4 flex-grow">
-        <div className="relative aspect-[2/3] w-full mb-4 overflow-hidden rounded-md bg-muted">
-          <img
-            src={template.previewUrl}
-            alt={template.name}
-            className="object-cover w-full h-full transition-all hover:scale-105 duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
+        <div className="mb-4 p-4 bg-muted rounded-md flex items-center justify-center">
+          <FileText className="h-12 w-12 text-primary/40" />
         </div>
         
         <div className="flex flex-wrap gap-1 mb-2">

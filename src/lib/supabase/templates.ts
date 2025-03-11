@@ -1,3 +1,4 @@
+
 import { extendedSupabase } from "./config";
 import { ensureTemplatesTableExists, ensureTemplatesBucketExists } from "./infrastructure";
 import { TemplateMetadata } from "../pdf";
@@ -28,14 +29,13 @@ export async function fetchTemplates(): Promise<TemplateMetadata[]> {
     name: template.name,
     createdAt: new Date(template.created_at),
     createdBy: template.created_by,
-    previewUrl: template.preview_url || "/placeholder.svg",
     placeholders: template.placeholders || [],
   })) || [];
 }
 
 export async function uploadTemplate(
   file: File, 
-  metadata: Omit<TemplateMetadata, 'id' | 'previewUrl'>
+  metadata: Omit<TemplateMetadata, 'id'>
 ): Promise<TemplateMetadata | null> {
   // Get current user
   const currentUser = getCurrentUser();
@@ -83,11 +83,7 @@ export async function uploadTemplate(
   const fileUrl = urlData.publicUrl;
   console.log("Public URL generated:", fileUrl);
   
-  // 3. Create a preview image (in a real implementation)
-  // For this demo, we'll use a placeholder
-  const previewUrl = "/placeholder.svg";
-  
-  // 4. Insert template metadata into the database
+  // 3. Insert template metadata into the database
   // Use the user ID from getCurrentUser() or a demo value
   const createdBy = currentUser?.id || "demo-user";
   console.log("Creating template with created_by:", createdBy);
@@ -98,7 +94,6 @@ export async function uploadTemplate(
       name: metadata.name,
       created_by: createdBy,
       file_url: fileUrl,
-      preview_url: previewUrl,
       placeholders: metadata.placeholders,
     })
     .select()
@@ -117,7 +112,6 @@ export async function uploadTemplate(
       name: data.name,
       createdAt: new Date(data.created_at),
       createdBy: data.created_by,
-      previewUrl: data.preview_url || previewUrl,
       placeholders: data.placeholders || [],
     };
   }
@@ -168,7 +162,6 @@ export async function updateTemplate(
       name: data.name,
       createdAt: new Date(data.created_at || ''),
       createdBy: data.created_by,
-      previewUrl: data.preview_url || "/placeholder.svg",
       placeholders: data.placeholders || [],
     };
   }
