@@ -18,11 +18,14 @@ interface TemplateTable {
 // Template related operations
 export async function fetchTemplates(): Promise<TemplateMetadata[]> {
   try {
-    // Using typed client but with string table name
+    // Using type assertion since the Supabase types don't know about our templates table
     const { data, error } = await supabase
-      .from<TemplateTable>('templates')
+      .from('templates')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { 
+        data: TemplateTable[] | null; 
+        error: any;
+      };
 
     if (error) {
       console.error("Error fetching templates:", error);
@@ -77,7 +80,7 @@ export async function uploadTemplate(
     
     // 4. Insert template metadata into the database
     const { data, error: dbError } = await supabase
-      .from<TemplateTable>('templates')
+      .from('templates')
       .insert([
         {
           name: metadata.name,
@@ -85,10 +88,13 @@ export async function uploadTemplate(
           file_url: fileUrl,
           preview_url: previewUrl,
           placeholders: metadata.placeholders,
-        } as TemplateTable
+        }
       ])
       .select()
-      .single();
+      .single() as {
+        data: TemplateTable | null;
+        error: any;
+      };
       
     if (dbError) {
       console.error("Error saving template metadata:", dbError);
@@ -118,10 +124,13 @@ export async function deleteTemplate(id: string): Promise<boolean> {
   try {
     // First get the template to find the file path
     const { data: template, error: fetchError } = await supabase
-      .from<TemplateTable>('templates')
+      .from('templates')
       .select('file_url')
       .eq('id', id)
-      .single();
+      .single() as {
+        data: TemplateTable | null;
+        error: any;
+      };
       
     if (fetchError) {
       console.error("Error fetching template for deletion:", fetchError);
@@ -149,9 +158,11 @@ export async function deleteTemplate(id: string): Promise<boolean> {
     
     // Delete the template record
     const { error: dbError } = await supabase
-      .from<TemplateTable>('templates')
+      .from('templates')
       .delete()
-      .eq('id', id);
+      .eq('id', id) as {
+        error: any;
+      };
       
     if (dbError) {
       console.error("Error deleting template record:", dbError);
