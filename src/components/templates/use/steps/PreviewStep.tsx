@@ -9,7 +9,7 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import { toast } from "sonner";
 
 // Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface PreviewStepProps {
   template: TemplateMetadata;
@@ -30,22 +30,26 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
   const [pdfError, setPdfError] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   // Reset error state when URL changes
   useEffect(() => {
     if (generatedPdfUrl) {
       setPdfError(false);
+      setPdfUrl(generatedPdfUrl);
     }
   }, [generatedPdfUrl]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setPageNumber(1);
+    setLoading(false);
   };
 
   const handlePdfError = (error: Error) => {
     console.error("Error loading PDF", error);
     setPdfError(true);
+    setLoading(false);
     toast.error("Error loading PDF preview. You can still download the document.");
   };
 
@@ -67,10 +71,10 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
       </div>
 
       <div className="bg-muted rounded-md overflow-hidden border h-[60vh] relative">
-        {generatedPdfUrl && !pdfError ? (
+        {pdfUrl && !pdfError ? (
           <div className="w-full h-full flex flex-col items-center overflow-auto">
             <Document
-              file={generatedPdfUrl}
+              file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={handlePdfError}
               loading={
@@ -80,12 +84,15 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
               }
               className="w-full h-full flex flex-col items-center"
             >
-              <Page 
-                pageNumber={pageNumber} 
-                className="my-4"
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
-              />
+              {numPages && (
+                <Page 
+                  pageNumber={pageNumber} 
+                  className="my-4"
+                  renderTextLayer={true}
+                  renderAnnotationLayer={true}
+                  scale={1.2}
+                />
+              )}
             </Document>
             
             {numPages && numPages > 1 && (
@@ -129,7 +136,13 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                   setPdfError(false);
                   setLoading(true);
                   // Force a reload after a short delay
-                  setTimeout(() => setLoading(false), 1000);
+                  setTimeout(() => {
+                    if (generatedPdfUrl) {
+                      setPdfUrl(null);
+                      setTimeout(() => setPdfUrl(generatedPdfUrl), 50);
+                    }
+                    setLoading(false);
+                  }, 1000);
                 }}
                 disabled={loading}
               >

@@ -1,4 +1,3 @@
-
 // In a real implementation, we would use libraries like pdf-lib, pdf.js, etc.
 // For now, we'll create placeholder functions that simulate the behavior
 
@@ -65,82 +64,104 @@ export const generatePDF = async (
     console.log("Data to fill:", filledData);
     
     // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Import and use the Supabase client correctly
+    // Import the Supabase client correctly
     const { supabase } = await import('@/integrations/supabase/client');
+    
+    // Fetch template from Supabase
     const { data: template, error } = await supabase
       .from('templates')
       .select('file_url, name')
       .eq('id', templateId)
       .single();
     
-    if (error) {
+    if (error || !template) {
       console.error("Error fetching template:", error);
-      throw new Error(`Template not found: ${error.message}`);
+      return fallbackPDF();
     }
     
-    if (!template || !template.file_url) {
-      // Fallback to sample PDF if template URL is not available
+    if (!template.file_url) {
       console.warn("Template file URL not found, using fallback sample PDF");
       return fallbackPDF();
     }
     
     console.log("Using template file URL:", template.file_url);
     
-    // Create a descriptive filename based on the template name
-    const fileName = `${template.name.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`;
-    
-    // In a real implementation with pdf-lib, we would:
-    // 1. Fetch the template PDF
-    // 2. Load it into pdf-lib
-    // 3. Add text at the appropriate positions for each placeholder
-    // 4. Save and return the modified PDF
-    
-    // For this demo, we'll generate a simple PDF with the filled data
-    // using PDFMake or another client-side PDF generation library
-    
-    // Create a new Blob with text content representing the filled PDF
-    const pdfContent = generateFilledPDFContent(template.name, filledData);
-    const pdfBlob = new Blob([pdfContent], { type: 'application/pdf' });
-    
-    // Create a URL for the Blob
-    const downloadUrl = URL.createObjectURL(pdfBlob);
-    
-    return {
-      downloadUrl,
-      fileName,
-    };
+    try {
+      // In a real implementation, we would use PDFLib to fill the template
+      // For demo purposes, we'll use pdfmake to create a simple filled PDF
+      const pdfMake = await import('pdfmake/build/pdfmake');
+      const pdfFonts = await import('pdfmake/build/vfs_fonts');
+      
+      pdfMake.default.vfs = pdfFonts.pdfMake.vfs;
+      
+      // Create a document definition
+      const docDefinition = {
+        content: [
+          { text: `${template.name}`, style: 'header' },
+          { text: '\n\n' },
+        ],
+        styles: {
+          header: {
+            fontSize: 18,
+            bold: true,
+            margin: [0, 0, 0, 10]
+          },
+          field: {
+            fontSize: 12,
+            margin: [0, 5, 0, 5]
+          }
+        }
+      };
+      
+      // Add each field and its value to the document
+      Object.entries(filledData).forEach(([key, value]) => {
+        const fieldName = key.split('_').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
+        docDefinition.content.push({
+          text: `${fieldName}: ${value}`,
+          style: 'field'
+        });
+      });
+      
+      // Create a descriptive filename
+      const fileName = `${template.name.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`;
+      
+      // Generate the PDF as a blob
+      const pdfBlob = new Promise<Blob>((resolve) => {
+        const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
+        pdfDocGenerator.getBlob((blob) => {
+          resolve(blob);
+        });
+      });
+      
+      const blob = await pdfBlob;
+      const downloadUrl = URL.createObjectURL(blob);
+      
+      return {
+        downloadUrl,
+        fileName,
+      };
+    } catch (pdfError) {
+      console.error("Error generating PDF with pdfmake:", pdfError);
+      return fallbackPDF();
+    }
   } catch (error) {
     console.error("PDF generation error:", error);
-    // Fallback to sample PDF if there's an error
     return fallbackPDF();
   }
-};
-
-// Helper function to generate a simple PDF with filled data
-const generateFilledPDFContent = (templateName: string, filledData: Record<string, string>): string => {
-  // In a real implementation, this would generate actual PDF content
-  // For now, we'll create a text representation
-  let content = `Template: ${templateName}\n\n`;
-  
-  // Add each field and its value
-  Object.entries(filledData).forEach(([key, value]) => {
-    const fieldName = key.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-    
-    content += `${fieldName}: ${value}\n`;
-  });
-  
-  return content;
 };
 
 // Fallback function to provide a sample PDF if there's an error
 const fallbackPDF = (): GeneratedPDF => {
   console.warn("Using fallback PDF due to error");
+  
+  // Use a reliable sample PDF URL
   return {
-    downloadUrl: "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf",
+    downloadUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
     fileName: `fallback-document-${new Date().getTime()}.pdf`,
   };
 };

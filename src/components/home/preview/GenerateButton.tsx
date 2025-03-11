@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ const GenerateButton = () => {
       
       const result = await generatePDF(templateId, filledData);
       
+      // Handle download based on URL type
       if (result.downloadUrl.startsWith('blob:')) {
         // For blob URLs created with URL.createObjectURL
         const link = document.createElement("a");
@@ -50,7 +51,7 @@ const GenerateButton = () => {
         // Clean up the blob URL after download
         setTimeout(() => URL.revokeObjectURL(result.downloadUrl), 100);
       } else {
-        // For regular URLs (like fallback PDF)
+        // For regular URLs (like fallback PDF), open in new tab
         window.open(result.downloadUrl, '_blank');
       }
       
