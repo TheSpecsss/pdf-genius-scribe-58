@@ -1,14 +1,26 @@
 
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import { TemplateMetadata } from "./pdf";
 import { toast } from "sonner";
 
+// Define types for our template table
+interface TemplateTable {
+  id: string;
+  name: string;
+  created_at: string;
+  created_by: string;
+  file_url: string;
+  preview_url?: string;
+  placeholders?: string[];
+}
+
 // Template related operations
 export async function fetchTemplates(): Promise<TemplateMetadata[]> {
   try {
-    // Using 'any' as a temporary type assertion until the Supabase schema is properly defined
+    // Using typed client but with string table name
     const { data, error } = await supabase
-      .from('templates' as any)
+      .from<TemplateTable>('templates')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -65,7 +77,7 @@ export async function uploadTemplate(
     
     // 4. Insert template metadata into the database
     const { data, error: dbError } = await supabase
-      .from('templates' as any)
+      .from<TemplateTable>('templates')
       .insert([
         {
           name: metadata.name,
@@ -73,7 +85,7 @@ export async function uploadTemplate(
           file_url: fileUrl,
           preview_url: previewUrl,
           placeholders: metadata.placeholders,
-        }
+        } as TemplateTable
       ])
       .select()
       .single();
@@ -89,8 +101,8 @@ export async function uploadTemplate(
         name: data.name,
         createdAt: new Date(data.created_at),
         createdBy: data.created_by,
-        previewUrl: data.preview_url,
-        placeholders: data.placeholders,
+        previewUrl: data.preview_url || previewUrl,
+        placeholders: data.placeholders || [],
       };
     }
     
@@ -106,7 +118,7 @@ export async function deleteTemplate(id: string): Promise<boolean> {
   try {
     // First get the template to find the file path
     const { data: template, error: fetchError } = await supabase
-      .from('templates' as any)
+      .from<TemplateTable>('templates')
       .select('file_url')
       .eq('id', id)
       .single();
@@ -137,7 +149,7 @@ export async function deleteTemplate(id: string): Promise<boolean> {
     
     // Delete the template record
     const { error: dbError } = await supabase
-      .from('templates' as any)
+      .from<TemplateTable>('templates')
       .delete()
       .eq('id', id);
       
