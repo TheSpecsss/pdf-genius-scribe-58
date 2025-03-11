@@ -31,7 +31,8 @@ const TemplateStepsModal: React.FC<TemplateStepsModalProps> = ({
     generatePreview,
     handleDownload,
     updateFormData,
-    setCurrentStep
+    setCurrentStep,
+    setStepData
   } = useTemplateSteps(template, () => onOpenChange(false));
 
   // Render appropriate step content based on current step
@@ -44,7 +45,10 @@ const TemplateStepsModal: React.FC<TemplateStepsModalProps> = ({
             userInput={stepData.userInput}
             isSubmitting={isSubmitting}
             onUpdateInput={(input) => 
-              stepData.userInput = input
+              setStepData(prev => ({
+                ...prev,
+                userInput: input
+              }))
             }
             onSubmit={processAICompletion}
           />
