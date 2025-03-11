@@ -16,6 +16,19 @@ export interface GeneratedPDF {
   fileName: string;
 }
 
+export interface AIResponse {
+  auto_filled_data: Record<string, string>;
+  placeholder_positions: Record<string, {
+    page: number;
+    x: number;
+    y: number;
+  }>;
+  font_detection: {
+    font_name: string;
+    font_size: number;
+  };
+}
+
 export const analyzePDF = async (file: File): Promise<{
   text: string;
   placeholders: string[];
