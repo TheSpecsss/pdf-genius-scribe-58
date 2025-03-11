@@ -23,17 +23,17 @@ BEGIN
         CREATE POLICY "Allow public read access" 
         ON public.templates FOR SELECT USING (true);
         
-        -- Modified policy: Allow any insert with a valid created_by value
-        CREATE POLICY "Allow inserts with valid created_by" 
-        ON public.templates FOR INSERT WITH CHECK (created_by IS NOT NULL);
+        -- Completely open insert policy - no restrictions
+        CREATE POLICY "Allow all inserts" 
+        ON public.templates FOR INSERT WITH CHECK (true);
         
-        -- Modified policy: Allow any update if created_by matches
-        CREATE POLICY "Allow users to update their own templates" 
-        ON public.templates FOR UPDATE USING (created_by = current_user OR true);
+        -- Open update policy
+        CREATE POLICY "Allow all updates" 
+        ON public.templates FOR UPDATE USING (true);
         
-        -- Modified policy: Allow any delete if created_by matches
-        CREATE POLICY "Allow users to delete their own templates" 
-        ON public.templates FOR DELETE USING (created_by = current_user OR true);
+        -- Open delete policy
+        CREATE POLICY "Allow all deletes" 
+        ON public.templates FOR DELETE USING (true);
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
