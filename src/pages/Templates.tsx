@@ -1,15 +1,37 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import TemplateList from "@/components/templates/TemplateList";
 import { Button } from "@/components/ui/button";
 import { UploadCloud, Loader2 } from "lucide-react";
-import { fetchTemplates } from "@/lib/supabase";
+import { fetchTemplates, ensureTemplatesTableExists, ensureTemplatesBucketExists } from "@/lib/supabase";
 import UploadTemplate from "@/components/templates/UploadTemplate";
+import { toast } from "sonner";
 
 const Templates = () => {
   const queryClient = useQueryClient();
+  
+  // Check if the infrastructure is ready
+  useEffect(() => {
+    const setupInfrastructure = async () => {
+      try {
+        const [tableExists, bucketExists] = await Promise.all([
+          ensureTemplatesTableExists(),
+          ensureTemplatesBucketExists()
+        ]);
+        
+        if (tableExists && bucketExists) {
+          queryClient.invalidateQueries({ queryKey: ['templates'] });
+        }
+      } catch (error) {
+        console.error("Failed to initialize Supabase infrastructure:", error);
+        toast.error("Failed to connect to the database");
+      }
+    };
+    
+    setupInfrastructure();
+  }, [queryClient]);
   
   // Fetch templates from Supabase
   const { data: templates, isLoading, error } = useQuery({

@@ -41,9 +41,84 @@ type ExtendedDatabase = Database & {
 // Type assertion for the extended supabase client
 const extendedSupabase = supabase as unknown as ReturnType<typeof createClient<ExtendedDatabase>>;
 
+// Check if templates table exists and create it if it doesn't
+export async function ensureTemplatesTableExists(): Promise<boolean> {
+  try {
+    // Try to query the templates table to see if it exists
+    const { error } = await supabase.from('templates').select('count').limit(1).single();
+    
+    if (error && error.code === '42P01') { // Table doesn't exist error code
+      // Create the templates table
+      const { error: createError } = await supabase.rpc('create_templates_table');
+      
+      if (createError) {
+        console.error("Failed to create templates table:", createError);
+        toast.error("Failed to set up database. Please check console for details.");
+        return false;
+      }
+      
+      toast.success("Templates table created successfully");
+      return true;
+    } else if (error) {
+      console.error("Error checking templates table:", error);
+      return false;
+    }
+    
+    // Table exists
+    return true;
+  } catch (error) {
+    console.error("Error setting up templates table:", error);
+    return false;
+  }
+}
+
+// Check if templates storage bucket exists and create it if it doesn't
+export async function ensureTemplatesBucketExists(): Promise<boolean> {
+  try {
+    // Check if the bucket exists
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error("Error checking storage buckets:", bucketsError);
+      return false;
+    }
+    
+    const templatesBucketExists = buckets?.some(bucket => bucket.name === 'templates');
+    
+    if (!templatesBucketExists) {
+      // Create the templates bucket with public access
+      const { error: createError } = await supabase.storage.createBucket('templates', {
+        public: true,
+        allowedMimeTypes: ['application/pdf'],
+        fileSizeLimit: 10485760, // 10MB
+      });
+      
+      if (createError) {
+        console.error("Failed to create templates bucket:", createError);
+        toast.error("Failed to set up storage. Please check console for details.");
+        return false;
+      }
+      
+      toast.success("Templates storage created successfully");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error setting up templates bucket:", error);
+    return false;
+  }
+}
+
 // Template related operations
 export async function fetchTemplates(): Promise<TemplateMetadata[]> {
   try {
+    // Make sure the table exists before querying
+    const tableExists = await ensureTemplatesTableExists();
+    if (!tableExists) {
+      return [];
+    }
+    
+    // Now we can safely query the table
     const { data, error } = await extendedSupabase
       .from('templates')
       .select('*')
@@ -74,9 +149,20 @@ export async function uploadTemplate(
   metadata: Omit<TemplateMetadata, 'id' | 'previewUrl'>
 ): Promise<TemplateMetadata | null> {
   try {
+    // Make sure the table and bucket exist before uploading
+    const [tableExists, bucketExists] = await Promise.all([
+      ensureTemplatesTableExists(),
+      ensureTemplatesBucketExists()
+    ]);
+    
+    if (!tableExists || !bucketExists) {
+      toast.error("Failed to set up infrastructure for template upload");
+      return null;
+    }
+    
     // 1. Upload the PDF file to storage
     const fileName = `${Date.now()}-${file.name}`;
-    const filePath = `templates/${fileName}`;
+    const filePath = `${fileName}`;
     
     const { error: uploadError } = await supabase
       .storage
