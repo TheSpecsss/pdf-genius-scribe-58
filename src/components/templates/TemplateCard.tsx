@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { deleteTemplate } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
+import EditTemplate from "./EditTemplate";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,6 +95,8 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
             Use Template
           </Link>
         </Button>
+        
+        <EditTemplate template={template} />
         
         <AlertDialog>
           <AlertDialogTrigger asChild>
