@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,7 @@ import { Upload, File, Check, Loader2 } from "lucide-react";
 import { analyzePDF } from "@/lib/pdf";
 import { uploadTemplate } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
+import { getCurrentUser } from "@/lib/auth";
 
 const UploadTemplate: React.FC = () => {
   const queryClient = useQueryClient();
@@ -68,14 +68,20 @@ const UploadTemplate: React.FC = () => {
       return;
     }
     
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      toast.error("You must be logged in to upload templates");
+      return;
+    }
+    
     setIsUploading(true);
     
     try {
-      // Upload template to Supabase
+      // Upload template to Supabase with current user ID
       const result = await uploadTemplate(file, {
         name: templateName,
         createdAt: new Date(),
-        createdBy: "user1", // In a real app, use authenticated user ID
+        createdBy: currentUser.id,
         placeholders,
       });
       

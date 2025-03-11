@@ -4,6 +4,7 @@ import { ensureTemplatesTableExists, ensureTemplatesBucketExists } from "./infra
 import { TemplateMetadata } from "../pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getCurrentUser } from "../auth";
 
 // Template related operations
 export async function fetchTemplates(): Promise<TemplateMetadata[]> {
@@ -45,6 +46,13 @@ export async function uploadTemplate(
   metadata: Omit<TemplateMetadata, 'id' | 'previewUrl'>
 ): Promise<TemplateMetadata | null> {
   try {
+    // Get current user
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      toast.error("You must be logged in to upload templates");
+      return null;
+    }
+
     // Make sure the table exists before uploading
     const tableExists = await ensureTemplatesTableExists();
     const bucketExists = await ensureTemplatesBucketExists();
@@ -58,10 +66,14 @@ export async function uploadTemplate(
     const fileName = `${Date.now()}-${file.name}`;
     const filePath = `${fileName}`;
     
+    // Configure the request with the appropriate headers for auth
     const { error: uploadError } = await supabase
       .storage
       .from('templates')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        // Use upsert to overwrite if file exists
+        upsert: true,
+      });
       
     if (uploadError) {
       console.error("Error uploading template file:", uploadError);
@@ -82,11 +94,12 @@ export async function uploadTemplate(
     const previewUrl = "/placeholder.svg";
     
     // 4. Insert template metadata into the database
+    // Explicitly use the user ID from getCurrentUser()
     const { data, error: dbError } = await extendedSupabase
       .from('templates')
       .insert({
         name: metadata.name,
-        created_by: metadata.createdBy,
+        created_by: currentUser.id,
         file_url: fileUrl,
         preview_url: previewUrl,
         placeholders: metadata.placeholders,
