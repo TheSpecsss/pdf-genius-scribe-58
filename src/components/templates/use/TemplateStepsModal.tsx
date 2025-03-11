@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -14,7 +13,8 @@ import { toast } from "sonner";
 import ProvideInfoStep from "./steps/ProvideInfoStep";
 import ConfirmationStep from "./steps/ConfirmationStep";
 import PreviewStep from "./steps/PreviewStep";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, CircleCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TemplateStepsModalProps {
   template: TemplateMetadata;
@@ -174,6 +174,12 @@ const TemplateStepsModal: React.FC<TemplateStepsModalProps> = ({
     }
   };
 
+  const steps = [
+    { id: 1, name: "Provide information" },
+    { id: 2, name: "Confirm details" },
+    { id: 3, name: "Preview and download" },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
@@ -184,6 +190,7 @@ const TemplateStepsModal: React.FC<TemplateStepsModalProps> = ({
               size="icon"
               onClick={handleClose}
               disabled={isSubmitting}
+              className="rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
@@ -193,14 +200,48 @@ const TemplateStepsModal: React.FC<TemplateStepsModalProps> = ({
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {template.name}
           </DialogTitle>
-          <DialogDescription>
-            Step {currentStep} of 3:{" "}
-            {currentStep === 1
-              ? "Provide information"
-              : currentStep === 2
-              ? "Confirm details"
-              : "Preview and download"}
-          </DialogDescription>
+          
+          {/* Step indicator */}
+          <div className="flex items-center w-full mt-4 mb-2">
+            {steps.map((step, i) => (
+              <React.Fragment key={step.id}>
+                <div className="flex flex-col items-center">
+                  <div 
+                    className={cn(
+                      "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
+                      currentStep > step.id 
+                        ? "bg-primary border-primary text-primary-foreground" 
+                        : currentStep === step.id 
+                          ? "border-primary text-primary" 
+                          : "border-muted-foreground text-muted-foreground"
+                    )}
+                  >
+                    {currentStep > step.id ? (
+                      <CircleCheck className="h-4 w-4" />
+                    ) : (
+                      <span>{step.id}</span>
+                    )}
+                  </div>
+                  <span 
+                    className={cn(
+                      "text-xs mt-1", 
+                      currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {step.name}
+                  </span>
+                </div>
+                {i < steps.length - 1 && (
+                  <div 
+                    className={cn(
+                      "h-[2px] flex-1 mx-1",
+                      currentStep > i + 1 ? "bg-primary" : "bg-muted"
+                    )}
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
         </DialogHeader>
 
         <div className="px-6 pb-6">{renderStepContent()}</div>
