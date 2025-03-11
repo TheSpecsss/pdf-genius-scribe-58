@@ -34,7 +34,8 @@ export async function ensureTemplatesTableExists(): Promise<boolean> {
   }
 }
 
-// Check if templates storage bucket exists and create it if it doesn't
+// Check if templates storage bucket exists
+// We don't need to create it anymore since it's created by SQL migration
 export async function ensureTemplatesBucketExists(): Promise<boolean> {
   try {
     // Check if the bucket exists
@@ -48,25 +49,15 @@ export async function ensureTemplatesBucketExists(): Promise<boolean> {
     const templatesBucketExists = buckets?.some(bucket => bucket.name === 'templates');
     
     if (!templatesBucketExists) {
-      // Create the templates bucket with public access
-      const { error: createError } = await supabase.storage.createBucket('templates', {
-        public: true,
-        allowedMimeTypes: ['application/pdf'],
-        fileSizeLimit: 10485760, // 10MB
-      });
-      
-      if (createError) {
-        console.error("Failed to create templates bucket:", createError);
-        toast.error("Failed to set up storage. Please check console for details.");
-        return false;
-      }
-      
-      toast.success("Templates storage created successfully");
+      // Instead of creating the bucket (which fails due to RLS), just notify the user
+      console.log("Templates bucket doesn't exist but should have been created by SQL migration");
+      toast.error("Templates storage not found. Please contact an administrator.");
+      return false;
     }
     
     return true;
   } catch (error) {
-    console.error("Error setting up templates bucket:", error);
+    console.error("Error checking templates bucket:", error);
     return false;
   }
 }
