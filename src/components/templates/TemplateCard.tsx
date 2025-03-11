@@ -3,16 +3,47 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar } from "lucide-react";
+import { FileText, Calendar, Trash2 } from "lucide-react";
 import { TemplateMetadata } from "@/lib/pdf";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { deleteTemplate } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface TemplateCardProps {
   template: TemplateMetadata;
 }
 
 const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
+  const queryClient = useQueryClient();
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteTemplate(template.id);
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      toast.success("Template deleted successfully");
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      toast.error("Failed to delete template");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Card className="card-hover overflow-hidden transition-all duration-300 h-full flex flex-col">
       <CardHeader className="pb-2">
@@ -50,12 +81,38 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
         </div>
       </CardContent>
       
-      <CardFooter className="pt-0">
-        <Button asChild className="w-full">
+      <CardFooter className="pt-0 flex gap-2">
+        <Button asChild className="flex-1">
           <Link to={`/templates/${template.id}`}>
             Use Template
           </Link>
         </Button>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="icon" className="flex-shrink-0">
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Template</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this template? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );

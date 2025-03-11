@@ -1,39 +1,54 @@
 
 import React from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import TemplateList from "@/components/templates/TemplateList";
 import { Button } from "@/components/ui/button";
-import { UploadCloud } from "lucide-react";
-import { TemplateMetadata } from "@/lib/pdf";
+import { UploadCloud, Loader2 } from "lucide-react";
+import { fetchTemplates } from "@/lib/supabase";
+import UploadTemplate from "@/components/templates/UploadTemplate";
 
 const Templates = () => {
-  // Mock template data
-  const mockTemplates: TemplateMetadata[] = [
-    {
-      id: "1",
-      name: "Invoice Template",
-      createdAt: new Date(2023, 5, 15),
-      createdBy: "user1",
-      previewUrl: "/placeholder.svg",
-      placeholders: ["company", "client", "amount", "date"],
-    },
-    {
-      id: "2",
-      name: "Contract Agreement",
-      createdAt: new Date(2023, 7, 3),
-      createdBy: "user1",
-      previewUrl: "/placeholder.svg",
-      placeholders: ["party1", "party2", "terms", "date", "signature"],
-    },
-    {
-      id: "3",
-      name: "Certificate Template",
-      createdAt: new Date(2023, 9, 22),
-      createdBy: "user1",
-      previewUrl: "/placeholder.svg",
-      placeholders: ["name", "course", "date", "instructor"],
-    }
-  ];
+  const queryClient = useQueryClient();
+  
+  // Fetch templates from Supabase
+  const { data: templates, isLoading, error } = useQuery({
+    queryKey: ['templates'],
+    queryFn: fetchTemplates,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow container py-8 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Loading templates...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow container py-8">
+          <div className="text-center py-10">
+            <h2 className="text-xl font-semibold mb-2">Failed to load templates</h2>
+            <p className="text-muted-foreground mb-4">
+              There was an error loading your templates. Please try again.
+            </p>
+            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['templates'] })}>
+              Retry
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,12 +61,9 @@ const Templates = () => {
               Browse and manage your PDF templates
             </p>
           </div>
-          <Button className="flex items-center gap-2">
-            <UploadCloud className="h-4 w-4" />
-            Upload New Template
-          </Button>
+          <UploadTemplate />
         </div>
-        <TemplateList templates={mockTemplates} />
+        <TemplateList templates={templates || []} />
       </main>
     </div>
   );

@@ -15,9 +15,11 @@ import {
 import { toast } from "sonner";
 import { Upload, File, Check, Loader2 } from "lucide-react";
 import { analyzePDF } from "@/lib/pdf";
-import { getCurrentUser } from "@/lib/auth";
+import { uploadTemplate } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 
 const UploadTemplate: React.FC = () => {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [templateName, setTemplateName] = useState("");
@@ -66,24 +68,26 @@ const UploadTemplate: React.FC = () => {
       return;
     }
     
-    const user = getCurrentUser();
-    
-    if (!user?.isAdmin) {
-      toast.error("Only admins can upload templates");
-      return;
-    }
-    
     setIsUploading(true);
     
     try {
-      // Simulate upload process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Upload template to Supabase
+      const result = await uploadTemplate(file, {
+        name: templateName,
+        createdAt: new Date(),
+        createdBy: "user1", // In a real app, use authenticated user ID
+        placeholders,
+      });
       
-      toast.success("Template uploaded successfully");
-      setOpen(false);
-      setFile(null);
-      setTemplateName("");
-      setPlaceholders([]);
+      if (result) {
+        toast.success("Template uploaded successfully");
+        // Refresh templates list
+        queryClient.invalidateQueries({ queryKey: ['templates'] });
+        setOpen(false);
+        setFile(null);
+        setTemplateName("");
+        setPlaceholders([]);
+      }
     } catch (error) {
       console.error("Error uploading template:", error);
       toast.error("Failed to upload template");
@@ -95,9 +99,9 @@ const UploadTemplate: React.FC = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Template
+        <Button className="flex items-center gap-2">
+          <Upload className="h-4 w-4" />
+          Upload New Template
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
