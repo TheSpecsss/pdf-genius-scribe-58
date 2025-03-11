@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ const EditDialogContent: React.FC<EditDialogContentProps> = ({ template, setOpen
   const [isUpdating, setIsUpdating] = useState(false);
   const [placeholders, setPlaceholders] = useState<string[]>(template.placeholders);
   const [error, setError] = useState<string | null>(null);
+  const [newPlaceholder, setNewPlaceholder] = useState("");
   
   const handleUpdate = async () => {
     setError(null);
@@ -33,7 +33,6 @@ const EditDialogContent: React.FC<EditDialogContentProps> = ({ template, setOpen
     setIsUpdating(true);
     
     try {
-      // Update template in Supabase
       const result = await updateTemplate(template.id, {
         name: templateName,
         placeholders,
@@ -41,7 +40,6 @@ const EditDialogContent: React.FC<EditDialogContentProps> = ({ template, setOpen
       
       if (result) {
         console.log("Template updated successfully");
-        // Refresh templates list
         queryClient.invalidateQueries({ queryKey: ['templates'] });
         setOpen(false);
       }
@@ -51,6 +49,17 @@ const EditDialogContent: React.FC<EditDialogContentProps> = ({ template, setOpen
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleAddPlaceholder = () => {
+    if (newPlaceholder.trim() && !placeholders.includes(newPlaceholder.trim())) {
+      setPlaceholders([...placeholders, newPlaceholder.trim()]);
+      setNewPlaceholder("");
+    }
+  };
+  
+  const handleRemovePlaceholder = (placeholder: string) => {
+    setPlaceholders(placeholders.filter(p => p !== placeholder));
   };
 
   return (
@@ -80,15 +89,34 @@ const EditDialogContent: React.FC<EditDialogContentProps> = ({ template, setOpen
           />
         </div>
         
-        {/* Display the original placeholders */}
-        <PlaceholdersList placeholders={placeholders} />
-        
-        {/* Optional: Add functionality to edit placeholders */}
-        <EditPlaceholders 
+        <PlaceholdersList 
           placeholders={placeholders} 
-          setPlaceholders={setPlaceholders}
-          isUpdating={isUpdating}
+          title="Template Placeholders"
+          editable={true}
+          onRemove={handleRemovePlaceholder}
+          maxHeight="max-h-40"
         />
+        
+        <div className="space-y-2">
+          <Label>Add New Placeholder</Label>
+          <div className="flex gap-2">
+            <Input
+              value={newPlaceholder}
+              onChange={(e) => setNewPlaceholder(e.target.value)}
+              placeholder="Add new placeholder"
+              disabled={isUpdating}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddPlaceholder()}
+            />
+            <Button 
+              type="button" 
+              onClick={handleAddPlaceholder}
+              disabled={isUpdating || !newPlaceholder.trim()}
+              size="sm"
+            >
+              Add
+            </Button>
+          </div>
+        </div>
       </div>
       
       <DialogFooter className="sm:justify-between">
@@ -109,78 +137,6 @@ const EditDialogContent: React.FC<EditDialogContentProps> = ({ template, setOpen
         </Button>
       </DialogFooter>
     </DialogContent>
-  );
-};
-
-interface EditPlaceholdersProps {
-  placeholders: string[];
-  setPlaceholders: React.Dispatch<React.SetStateAction<string[]>>;
-  isUpdating: boolean;
-}
-
-const EditPlaceholders: React.FC<EditPlaceholdersProps> = ({ 
-  placeholders, 
-  setPlaceholders,
-  isUpdating
-}) => {
-  const [newPlaceholder, setNewPlaceholder] = useState("");
-  
-  const handleAddPlaceholder = () => {
-    if (newPlaceholder.trim() && !placeholders.includes(newPlaceholder.trim())) {
-      setPlaceholders([...placeholders, newPlaceholder.trim()]);
-      setNewPlaceholder("");
-    }
-  };
-  
-  const handleRemovePlaceholder = (index: number) => {
-    setPlaceholders(placeholders.filter((_, i) => i !== index));
-  };
-  
-  return (
-    <div className="space-y-2">
-      <Label>Edit Placeholders</Label>
-      <div className="flex gap-2">
-        <Input
-          value={newPlaceholder}
-          onChange={(e) => setNewPlaceholder(e.target.value)}
-          placeholder="Add new placeholder"
-          disabled={isUpdating}
-          onKeyDown={(e) => e.key === 'Enter' && handleAddPlaceholder()}
-        />
-        <Button 
-          type="button" 
-          onClick={handleAddPlaceholder}
-          disabled={isUpdating || !newPlaceholder.trim()}
-          size="sm"
-        >
-          Add
-        </Button>
-      </div>
-      
-      {placeholders.length > 0 && (
-        <div className="border rounded-md p-3 max-h-32 overflow-y-auto">
-          <ul className="space-y-1">
-            {placeholders.map((placeholder, index) => (
-              <li key={index} className="flex items-center justify-between text-sm">
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-green-500 mr-2" />
-                  {placeholder}
-                </div>
-                <Button
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => handleRemovePlaceholder(index)}
-                  disabled={isUpdating}
-                  className="h-6 w-6 p-0"
-                >
-                  ×
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
   );
 };
 
