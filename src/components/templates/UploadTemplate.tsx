@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Upload, File, Check, Loader2 } from "lucide-react";
 import { analyzePDF } from "@/lib/pdf";
 import { uploadTemplate } from "@/lib/supabase";
@@ -27,9 +26,11 @@ const UploadTemplate: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [placeholders, setPlaceholders] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
+    setError(null);
     
     if (!selectedFile) {
       return;
@@ -37,7 +38,7 @@ const UploadTemplate: React.FC = () => {
     
     // Check if file is a PDF
     if (!selectedFile.type.includes("pdf")) {
-      toast.error("Please upload a PDF file");
+      setError("Please upload a PDF file");
       return;
     }
     
@@ -49,23 +50,25 @@ const UploadTemplate: React.FC = () => {
     try {
       const analysis = await analyzePDF(selectedFile);
       setPlaceholders(analysis.placeholders);
-      toast.success("PDF analyzed successfully");
+      console.log("PDF analyzed successfully");
     } catch (error) {
       console.error("Error analyzing PDF:", error);
-      toast.error("Failed to analyze PDF");
+      setError(`Failed to analyze PDF: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsAnalyzing(false);
     }
   };
   
   const handleUpload = async () => {
+    setError(null);
+    
     if (!file) {
-      toast.error("Please select a file to upload");
+      setError("Please select a file to upload");
       return;
     }
     
     if (!templateName.trim()) {
-      toast.error("Please provide a template name");
+      setError("Please provide a template name");
       return;
     }
     
@@ -87,7 +90,7 @@ const UploadTemplate: React.FC = () => {
       });
       
       if (result) {
-        toast.success("Template uploaded successfully");
+        console.log("Template uploaded successfully");
         // Refresh templates list
         queryClient.invalidateQueries({ queryKey: ['templates'] });
         setOpen(false);
@@ -97,7 +100,7 @@ const UploadTemplate: React.FC = () => {
       }
     } catch (error) {
       console.error("Error uploading template:", error);
-      toast.error(`Failed to upload template: ${error instanceof Error ? error.message : String(error)}`);
+      setError(`Failed to upload template: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsUploading(false);
     }
@@ -121,6 +124,12 @@ const UploadTemplate: React.FC = () => {
         </DialogHeader>
         
         <div className="space-y-4 py-4">
+          {error && (
+            <div className="bg-destructive/15 text-destructive rounded-md p-3 text-sm">
+              {error}
+            </div>
+          )}
+          
           <div className="flex flex-col space-y-2">
             <Label htmlFor="templateName">Template Name</Label>
             <Input

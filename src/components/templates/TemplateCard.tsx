@@ -9,7 +9,6 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { deleteTemplate } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,16 +28,18 @@ interface TemplateCardProps {
 const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleDelete = async () => {
+    setError(null);
     setIsDeleting(true);
     try {
       await deleteTemplate(template.id);
       queryClient.invalidateQueries({ queryKey: ['templates'] });
-      toast.success("Template deleted successfully");
+      console.log("Template deleted successfully");
     } catch (error) {
       console.error("Error deleting template:", error);
-      toast.error("Failed to delete template");
+      setError(`Failed to delete template: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsDeleting(false);
     }
@@ -79,6 +80,12 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template }) => {
             </Badge>
           )}
         </div>
+        
+        {error && (
+          <div className="bg-destructive/15 text-destructive rounded-md p-2 text-xs mt-2">
+            {error}
+          </div>
+        )}
       </CardContent>
       
       <CardFooter className="pt-0 flex gap-2">
