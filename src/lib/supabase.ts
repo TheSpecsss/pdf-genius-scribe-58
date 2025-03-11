@@ -6,8 +6,9 @@ import { toast } from "sonner";
 // Template related operations
 export async function fetchTemplates(): Promise<TemplateMetadata[]> {
   try {
+    // Using 'any' as a temporary type assertion until the Supabase schema is properly defined
     const { data, error } = await supabase
-      .from('templates')
+      .from('templates' as any)
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -16,14 +17,14 @@ export async function fetchTemplates(): Promise<TemplateMetadata[]> {
       throw error;
     }
 
-    return data.map(template => ({
+    return data?.map(template => ({
       id: template.id,
       name: template.name,
       createdAt: new Date(template.created_at),
       createdBy: template.created_by,
       previewUrl: template.preview_url || "/placeholder.svg",
       placeholders: template.placeholders || [],
-    }));
+    })) || [];
   } catch (error) {
     console.error("Failed to fetch templates:", error);
     toast.error("Failed to fetch templates");
@@ -64,7 +65,7 @@ export async function uploadTemplate(
     
     // 4. Insert template metadata into the database
     const { data, error: dbError } = await supabase
-      .from('templates')
+      .from('templates' as any)
       .insert([
         {
           name: metadata.name,
@@ -82,14 +83,18 @@ export async function uploadTemplate(
       throw dbError;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      createdAt: new Date(data.created_at),
-      createdBy: data.created_by,
-      previewUrl: data.preview_url,
-      placeholders: data.placeholders,
-    };
+    if (data) {
+      return {
+        id: data.id,
+        name: data.name,
+        createdAt: new Date(data.created_at),
+        createdBy: data.created_by,
+        previewUrl: data.preview_url,
+        placeholders: data.placeholders,
+      };
+    }
+    
+    return null;
   } catch (error) {
     console.error("Failed to upload template:", error);
     toast.error("Failed to upload template");
@@ -101,7 +106,7 @@ export async function deleteTemplate(id: string): Promise<boolean> {
   try {
     // First get the template to find the file path
     const { data: template, error: fetchError } = await supabase
-      .from('templates')
+      .from('templates' as any)
       .select('file_url')
       .eq('id', id)
       .single();
@@ -112,7 +117,7 @@ export async function deleteTemplate(id: string): Promise<boolean> {
     }
     
     // Extract the file path from the URL
-    if (template.file_url) {
+    if (template && template.file_url) {
       const filePathMatch = template.file_url.match(/templates\/(.+)$/);
       if (filePathMatch && filePathMatch[1]) {
         const filePath = filePathMatch[1];
@@ -132,7 +137,7 @@ export async function deleteTemplate(id: string): Promise<boolean> {
     
     // Delete the template record
     const { error: dbError } = await supabase
-      .from('templates')
+      .from('templates' as any)
       .delete()
       .eq('id', id);
       
