@@ -38,6 +38,10 @@ const GenerateButton = () => {
       
       const result = await generatePDF(templateId, filledData);
       
+      if (!result || !result.downloadUrl) {
+        throw new Error("Failed to generate PDF");
+      }
+      
       // Handle download based on URL type
       if (result.downloadUrl.startsWith('blob:')) {
         // For blob URLs created with URL.createObjectURL

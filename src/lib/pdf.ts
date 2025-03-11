@@ -1,3 +1,4 @@
+
 // In a real implementation, we would use libraries like pdf-lib, pdf.js, etc.
 // For now, we'll create placeholder functions that simulate the behavior
 
@@ -89,8 +90,7 @@ export const generatePDF = async (
     console.log("Using template file URL:", template.file_url);
     
     try {
-      // In a real implementation, we would use PDFLib to fill the template
-      // For demo purposes, we'll use pdfmake to create a simple filled PDF
+      // We'll use pdfmake to create a filled PDF document
       const pdfMake = await import('pdfmake/build/pdfmake');
       const pdfFonts = await import('pdfmake/build/vfs_fonts');
       
@@ -131,15 +131,19 @@ export const generatePDF = async (
       const fileName = `${template.name.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`;
       
       // Generate the PDF as a blob
-      const pdfBlob = new Promise<Blob>((resolve) => {
-        const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
-        pdfDocGenerator.getBlob((blob) => {
-          resolve(blob);
-        });
+      const pdfBlob = await new Promise<Blob>((resolve, reject) => {
+        try {
+          const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
+          pdfDocGenerator.getBlob((blob) => {
+            resolve(blob);
+          });
+        } catch (error) {
+          console.error("Error in PDF blob generation:", error);
+          reject(error);
+        }
       });
       
-      const blob = await pdfBlob;
-      const downloadUrl = URL.createObjectURL(blob);
+      const downloadUrl = URL.createObjectURL(pdfBlob);
       
       return {
         downloadUrl,
@@ -199,11 +203,16 @@ const fallbackPDF = async (): Promise<GeneratedPDF> => {
     };
     
     // Generate PDF blob
-    const pdfBlob = await new Promise<Blob>((resolve) => {
-      const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
-      pdfDocGenerator.getBlob((blob) => {
-        resolve(blob);
-      });
+    const pdfBlob = await new Promise<Blob>((resolve, reject) => {
+      try {
+        const pdfDocGenerator = pdfMake.default.createPdf(docDefinition);
+        pdfDocGenerator.getBlob((blob) => {
+          resolve(blob);
+        });
+      } catch (error) {
+        console.error("Error in fallback PDF blob generation:", error);
+        reject(error);
+      }
     });
     
     // Create blob URL

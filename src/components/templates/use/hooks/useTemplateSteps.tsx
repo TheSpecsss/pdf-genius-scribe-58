@@ -74,12 +74,22 @@ export const useTemplateSteps = (template: TemplateMetadata, onClose: () => void
   const generatePreview = async () => {
     setIsSubmitting(true);
     try {
+      console.log("Starting PDF generation with template ID:", template.id);
+      
+      if (!template.id) {
+        throw new Error("Template ID is missing");
+      }
+      
       // Generate PDF with filled data
       const result = await generatePDF(
         template.id,
         stepData.formData,
         stepData.aiResponse || undefined
       );
+
+      if (!result || !result.downloadUrl) {
+        throw new Error("Failed to generate PDF");
+      }
 
       // Update state with generated PDF URL
       setStepData((prev) => ({
