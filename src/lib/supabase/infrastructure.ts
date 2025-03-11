@@ -44,8 +44,28 @@ export async function ensureTemplatesBucketExists(): Promise<boolean> {
     
     if (error) {
       console.error("Error checking templates bucket:", error);
-      toast.error("Templates bucket not found. Please check your Supabase project configuration.");
-      return false;
+      toast.error("Templates bucket not found or not accessible. Attempting to create it...");
+      
+      // Call the function that creates the bucket (via SQL)
+      const { error: createError } = await (supabase as any).rpc('create_templates_table');
+      if (createError) {
+        console.error("Failed to create templates bucket:", createError);
+        toast.error("Failed to create templates storage bucket.");
+        return false;
+      }
+      
+      // Try to list again to verify bucket was created
+      const { error: retryError } = await supabase.storage
+        .from('templates')
+        .list('', { limit: 1 });
+        
+      if (retryError) {
+        console.error("Bucket still not accessible after creation attempt:", retryError);
+        return false;
+      }
+      
+      toast.success("Templates bucket created successfully");
+      return true;
     }
     
     // If we can list files, the bucket exists and we have access

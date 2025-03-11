@@ -49,8 +49,8 @@ export async function uploadTemplate(
     // Get current user
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      toast.error("You must be logged in to upload templates");
-      return null;
+      console.warn("No logged in user, using demo user ID");
+      // Continue with upload as we now have open policies
     }
 
     // Make sure the table exists before uploading
@@ -66,8 +66,10 @@ export async function uploadTemplate(
     const fileName = `${Date.now()}-${file.name}`;
     const filePath = `${fileName}`;
     
+    console.log("Uploading file to storage:", filePath);
+    
     // Configure the request with the appropriate headers for auth
-    const { error: uploadError } = await supabase
+    const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('templates')
       .upload(filePath, file, {
@@ -81,6 +83,8 @@ export async function uploadTemplate(
       throw uploadError;
     }
     
+    console.log("File uploaded successfully:", uploadData);
+    
     // 2. Get the public URL
     const { data: urlData } = await supabase
       .storage
@@ -88,18 +92,22 @@ export async function uploadTemplate(
       .getPublicUrl(filePath);
       
     const fileUrl = urlData.publicUrl;
+    console.log("Public URL generated:", fileUrl);
     
     // 3. Create a preview image (in a real implementation)
     // For this demo, we'll use a placeholder
     const previewUrl = "/placeholder.svg";
     
     // 4. Insert template metadata into the database
-    // Explicitly use the user ID from getCurrentUser()
+    // Use the user ID from getCurrentUser() or a demo value
+    const createdBy = currentUser?.id || "demo-user";
+    console.log("Creating template with created_by:", createdBy);
+    
     const { data, error: dbError } = await extendedSupabase
       .from('templates')
       .insert({
         name: metadata.name,
-        created_by: currentUser.id,
+        created_by: createdBy,
         file_url: fileUrl,
         preview_url: previewUrl,
         placeholders: metadata.placeholders,
@@ -112,6 +120,8 @@ export async function uploadTemplate(
       toast.error("Error saving template: " + dbError.message);
       throw dbError;
     }
+    
+    console.log("Template metadata saved successfully:", data);
     
     if (data) {
       return {

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,18 +71,18 @@ const UploadTemplate: React.FC = () => {
     
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      toast.error("You must be logged in to upload templates");
-      return;
+      // Since our policies are open, we'll use a default user ID for demo purposes
+      console.warn("No logged in user found, using demo user ID");
     }
     
     setIsUploading(true);
     
     try {
-      // Upload template to Supabase with current user ID
+      // Upload template to Supabase with current user ID or "demo-user" if not logged in
       const result = await uploadTemplate(file, {
         name: templateName,
         createdAt: new Date(),
-        createdBy: currentUser.id,
+        createdBy: currentUser?.id || "demo-user",
         placeholders,
       });
       
