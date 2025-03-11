@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Textarea } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { TemplateMetadata } from "@/lib/pdf";
 import { ArrowRight, Loader2 } from "lucide-react";
