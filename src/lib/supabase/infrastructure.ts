@@ -34,29 +34,25 @@ export async function ensureTemplatesTableExists(): Promise<boolean> {
   }
 }
 
-// Check if templates storage bucket exists - we're now assuming it exists
+// Check if templates storage bucket exists
 export async function ensureTemplatesBucketExists(): Promise<boolean> {
   try {
-    // Check if the bucket exists
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    // Check if the bucket exists by trying to list files
+    const { data, error } = await supabase.storage
+      .from('templates')
+      .list('', { limit: 1 });
     
-    if (bucketsError) {
-      console.error("Error checking storage buckets:", bucketsError);
-      return false;
-    }
-    
-    const templatesBucketExists = buckets?.some(bucket => bucket.name === 'templates');
-    
-    if (!templatesBucketExists) {
-      // The bucket should already exist in Supabase
-      console.log("Please make sure the 'templates' bucket exists in your Supabase project");
+    if (error) {
+      console.error("Error checking templates bucket:", error);
       toast.error("Templates bucket not found. Please check your Supabase project configuration.");
       return false;
     }
     
+    // If we can list files, the bucket exists and we have access
     return true;
   } catch (error) {
     console.error("Error checking templates bucket:", error);
+    toast.error("Error accessing templates storage. Please check permissions.");
     return false;
   }
 }

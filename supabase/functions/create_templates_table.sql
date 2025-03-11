@@ -2,8 +2,6 @@
 -- Create a PostgreSQL function that will create the templates table if it doesn't exist
 CREATE OR REPLACE FUNCTION create_templates_table()
 RETURNS void AS $$
-DECLARE
-  v_count INTEGER;
 BEGIN
     -- Check if the table already exists
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'templates') THEN
@@ -34,8 +32,6 @@ BEGIN
         CREATE POLICY "Allow users to delete their own templates" 
         ON public.templates FOR DELETE USING (auth.uid()::text = created_by);
     END IF;
-
-    -- We don't need to create the bucket anymore as we're using an existing one
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
