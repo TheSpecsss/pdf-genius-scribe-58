@@ -3,8 +3,7 @@ import React from "react";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
-import { Step } from "./StepIndicator";
-import StepIndicator from "./StepIndicator";
+import StepIndicator, { Step } from "./StepIndicator";
 
 interface ModalHeaderProps {
   title: string;

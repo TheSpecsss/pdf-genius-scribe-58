@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { TemplateMetadata, generatePDF, AIResponse } from "@/lib/pdf";
 import { fetchAICompletion } from "@/lib/api";
+import { Step } from "../components/StepIndicator";
 
 export type TemplateStepData = {
   userInput: string;
@@ -128,7 +129,7 @@ export const useTemplateSteps = (template: TemplateMetadata, onClose: () => void
   };
 };
 
-export const TEMPLATE_STEPS = [
+export const TEMPLATE_STEPS: Step[] = [
   { id: 1, name: "Provide information" },
   { id: 2, name: "Confirm details" },
   { id: 3, name: "Preview and download" },

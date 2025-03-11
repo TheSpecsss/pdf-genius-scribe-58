@@ -2,8 +2,13 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
+export interface Step {
+  id: number;
+  name: string;
+}
+
 interface StepIndicatorProps {
-  steps: Array<{ id: number; name: string }>;
+  steps: Step[];
   currentStep: number;
   isSubmitting?: boolean;
 }
