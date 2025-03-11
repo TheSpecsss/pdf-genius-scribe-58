@@ -45,7 +45,7 @@ const extendedSupabase = supabase as unknown as ReturnType<typeof createClient<E
 export async function ensureTemplatesTableExists(): Promise<boolean> {
   try {
     // Try to query the templates table to see if it exists
-    const { error } = await supabase.from('templates').select('count').limit(1).single();
+    const { error } = await extendedSupabase.from('templates').select('count').limit(1).single();
     
     if (error && error.code === '42P01') { // Table doesn't exist error code
       // Create the templates table
