@@ -1,9 +1,9 @@
 
 import { toast } from "sonner";
 
-const GROQ_API_KEY = "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";
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "deepseek-r1-distill-llama-70b";
+// API configuration moved to environment variables
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "deepseek-r1-distill-llama-70b";
 
 export interface PlaceholderPosition {
   page: number;
@@ -67,31 +67,24 @@ export const fetchAICompletion = async (
         }`,
     };
 
-    const response = await fetch(GROQ_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
+    // Get API URL for the GROQ edge function
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: functionData } = await supabase.functions.invoke('groq-completion', {
+      body: {
+        model: MODEL,
         messages: [systemMessage, userMessage],
         temperature: 0.3,
         max_tokens: 2000,
-        response_format: { type: "json_object" },
-      }),
+        response_format: { type: "json_object" }
+      }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || "Failed to get AI completion");
+    if (!functionData) {
+      throw new Error("Failed to get AI completion");
     }
-
-    const data = await response.json();
     
-    // Extract and parse the JSON content from the response
-    const content = data.choices[0].message.content;
-    const parsedContent: AIResponse = JSON.parse(content);
+    // Parse the response data
+    const parsedContent: AIResponse = functionData.result;
     
     return parsedContent;
   } catch (error) {
