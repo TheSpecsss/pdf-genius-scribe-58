@@ -1,5 +1,6 @@
 
 import { GeneratedPDF } from './types';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 /**
  * Creates a fallback PDF when the main generation process fails
@@ -11,12 +12,11 @@ export const createFallbackPDF = async (): Promise<GeneratedPDF> => {
     // Import pdfmake dynamically
     const pdfMake = (await import('pdfmake/build/pdfmake')).default;
     
-    // Create a simple fallback document with Times New Roman 11px as default
+    // Set up the virtual file system for fonts
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    
+    // Create a simple fallback document with Roboto as default
     const docDefinition = {
-      defaultStyle: {
-        font: 'Times',
-        fontSize: 11
-      },
       content: [
         { 
           text: 'Generated Document',
@@ -44,6 +44,10 @@ export const createFallbackPDF = async (): Promise<GeneratedPDF> => {
         normal: {
           fontSize: 11
         }
+      },
+      defaultStyle: {
+        font: 'Roboto',
+        fontSize: 11
       }
     };
     

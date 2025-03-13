@@ -1,6 +1,7 @@
 
 import { GeneratedPDF, AIResponse } from './types';
 import { createFallbackPDF } from './fallback';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 /**
  * Generates a PDF document based on a template and filled data
@@ -43,12 +44,11 @@ export const generatePDF = async (
       // Import pdfmake dynamically
       const pdfMake = (await import('pdfmake/build/pdfmake')).default;
       
-      // Create a document definition with Times New Roman 11px as default
+      // Set up the virtual file system for fonts
+      pdfMake.vfs = pdfFonts.pdfMake.vfs;
+      
+      // Create a document definition with proper font definition
       const docDefinition = {
-        defaultStyle: {
-          font: 'Times',
-          fontSize: 11
-        },
         content: [
           { text: `${template.name}`, style: 'header' },
           { text: '\n\n' },
@@ -63,6 +63,10 @@ export const generatePDF = async (
             fontSize: 11,
             margin: [0, 5, 0, 5]
           }
+        },
+        defaultStyle: {
+          font: 'Roboto',
+          fontSize: 11
         }
       };
       
