@@ -40,12 +40,8 @@ export const generatePDF = async (
     console.log("Using template file URL:", template.file_url);
     
     try {
-      // Import pdfmake and fonts dynamically
+      // Import pdfmake dynamically
       const pdfMake = (await import('pdfmake/build/pdfmake')).default;
-      const pdfFonts = (await import('pdfmake/build/vfs_fonts')).pdfMake.vfs;
-      
-      // Set up the virtual file system for fonts
-      pdfMake.vfs = pdfFonts;
       
       // Create a document definition with Times New Roman 11px as default
       const docDefinition = {
