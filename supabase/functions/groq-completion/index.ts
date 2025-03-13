@@ -22,6 +22,16 @@ serve(async (req) => {
     }
 
     const { model, messages, temperature, max_tokens, response_format } = await req.json();
+    
+    // Validate required parameters
+    if (!model) {
+      throw new Error("Missing required parameter: model");
+    }
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      throw new Error("Missing or invalid parameter: messages");
+    }
+
+    console.log(`Making GROQ API request with model: ${model}`);
 
     const response = await fetch(GROQ_API_URL, {
       method: "POST",
@@ -32,18 +42,20 @@ serve(async (req) => {
       body: JSON.stringify({
         model,
         messages,
-        temperature,
-        max_tokens,
-        response_format,
+        temperature: temperature || 0.3,
+        max_tokens: max_tokens || 2000,
+        response_format: response_format || { type: "json_object" },
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error("GROQ API error:", errorData);
       throw new Error(errorData.error?.message || "Failed to get AI completion");
     }
 
     const data = await response.json();
+    console.log("GROQ API response received successfully");
     
     // Extract and parse the JSON content from the response
     const content = data.choices[0].message.content;

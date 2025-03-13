@@ -61,15 +61,17 @@ export const fetchAICompletion = async (
             // detected positions for each placeholder
           },
           "font_detection": {
-            "font_name": "detected font name",
-            "font_size": detected font size
+            "font_name": "Times New Roman",
+            "font_size": 11
           }
         }`,
     };
 
+    console.log("Invoking GROQ completion function...");
+    
     // Get API URL for the GROQ edge function
     const { supabase } = await import('@/integrations/supabase/client');
-    const { data: functionData } = await supabase.functions.invoke('groq-completion', {
+    const { data, error } = await supabase.functions.invoke('groq-completion', {
       body: {
         model: MODEL,
         messages: [systemMessage, userMessage],
@@ -79,12 +81,27 @@ export const fetchAICompletion = async (
       }
     });
 
-    if (!functionData) {
-      throw new Error("Failed to get AI completion");
+    if (error) {
+      console.error("Supabase function error:", error);
+      throw new Error(`Edge function error: ${error.message}`);
+    }
+
+    if (!data || !data.result) {
+      throw new Error("Failed to get AI completion or invalid response format");
     }
     
+    console.log("GROQ completion successful");
+    
     // Parse the response data
-    const parsedContent: AIResponse = functionData.result;
+    const parsedContent: AIResponse = data.result;
+    
+    // Ensure font_detection is set to default values if missing
+    if (!parsedContent.font_detection) {
+      parsedContent.font_detection = {
+        font_name: "Times New Roman",
+        font_size: 11
+      };
+    }
     
     return parsedContent;
   } catch (error) {
