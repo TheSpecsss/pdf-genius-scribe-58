@@ -8,8 +8,7 @@ export type {
 
 // Export analysis functions
 export {
-  analyzePDF,
-  detectFonts
+  analyzePDF
 } from './analyze';
 
 // Export generation function

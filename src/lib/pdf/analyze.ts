@@ -29,22 +29,3 @@ export const analyzePDF = async (file: File): Promise<{
     throw error;
   }
 };
-
-export const detectFonts = async (file: File): Promise<{
-  fontName: string;
-  fontSize: number;
-}> => {
-  try {
-    // In a real implementation, we would analyze the PDF to detect fonts
-    // For now, we'll return placeholder values
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing time
-    
-    return {
-      fontName: "Times New Roman",
-      fontSize: 12,
-    };
-  } catch (error) {
-    console.error("Font detection error:", error);
-    throw error;
-  }
-};

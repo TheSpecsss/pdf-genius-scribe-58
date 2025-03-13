@@ -19,8 +19,5 @@ export interface AIResponse {
     x: number;
     y: number;
   }>;
-  font_detection: {
-    font_name: string;
-    font_size: number;
-  };
+  // Removed font_detection property
 }

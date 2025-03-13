@@ -47,8 +47,12 @@ export const generatePDF = async (
       // Set up the virtual file system for fonts
       pdfMake.vfs = pdfFonts;
       
-      // Create a document definition
+      // Create a document definition with Times New Roman 11px as default
       const docDefinition = {
+        defaultStyle: {
+          font: 'Times',
+          fontSize: 11
+        },
         content: [
           { text: `${template.name}`, style: 'header' },
           { text: '\n\n' },
@@ -60,7 +64,7 @@ export const generatePDF = async (
             margin: [0, 0, 0, 10]
           },
           field: {
-            fontSize: 12,
+            fontSize: 11,
             margin: [0, 5, 0, 5]
           }
         }

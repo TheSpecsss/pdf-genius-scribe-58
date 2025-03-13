@@ -15,8 +15,12 @@ export const createFallbackPDF = async (): Promise<GeneratedPDF> => {
     // Set up the virtual file system for fonts
     pdfMake.vfs = pdfFonts;
     
-    // Create a simple fallback document
+    // Create a simple fallback document with Times New Roman 11px as default
     const docDefinition = {
+      defaultStyle: {
+        font: 'Times',
+        fontSize: 11
+      },
       content: [
         { 
           text: 'Generated Document',
@@ -42,7 +46,7 @@ export const createFallbackPDF = async (): Promise<GeneratedPDF> => {
           margin: [0, 0, 0, 5]
         },
         normal: {
-          fontSize: 12
+          fontSize: 11
         }
       }
     };
